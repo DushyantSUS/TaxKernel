@@ -1157,3 +1157,71 @@ def log_ca_notice(payload: dict = Body(...)):
     database.update_taxpayer_status(taxpayer_id, "NOTICE_PENDING")
     return {"status": "logged", "notice_id": nid}
 
+
+
+# =========================================================================== #
+# INTELLIGENCE CORE API (Milestone M7)
+# =========================================================================== #
+
+@app.post("/intel/ask")
+def intel_ask(payload: dict = Body(...)):
+    """Answer a tax/compliance query with auditable provenance and guardrails."""
+    query = str(payload.get("query", "")).strip()
+    if not query:
+        raise HTTPException(status_code=400, detail="query string cannot be empty")
+    user_id = int(payload.get("user_id", 1))
+    taxpayer_id = int(payload.get("taxpayer_id")) if payload.get("taxpayer_id") else None
+
+    from intel.service import ask
+    envelope = ask(query=query, user_id=user_id, taxpayer_id=taxpayer_id)
+    return envelope.to_dict()
+
+
+@app.post("/intel/simulate")
+def intel_simulate(payload: dict = Body(...)):
+    """Run a hypothetical tax simulation with auditable facts."""
+    gross = float(payload.get("gross_receipts")) if payload.get("gross_receipts") is not None else None
+    user_id = int(payload.get("user_id", 1))
+
+    from intel.service import simulate
+    envelope = simulate(gross_receipts=gross, user_id=user_id)
+    return envelope.to_dict()
+
+
+@app.get("/intel/health")
+def intel_health():
+    """Health probe for the local intelligence subsystem."""
+    import sqlite3
+    from intel.corpus.build import DB_PATH
+
+    count = 0
+    if DB_PATH.exists():
+        conn = sqlite3.connect(DB_PATH)
+        row = conn.execute("SELECT COUNT(*) FROM corpus_fts").fetchone()
+        count = row[0] if row else 0
+        conn.close()
+
+    return {
+        "status": "healthy",
+        "subsystem": "TaxKernel Intelligence",
+        "mode": "deterministic_narrator_tier1",
+        "corpus_records": count,
+        "offline_ready": True,
+    }
+
+
+@app.get("/intel/answer/{answer_id}")
+def intel_get_answer(answer_id: int):
+    """Retrieve an auditable historical answer envelope by its database ID."""
+    from intel.storage import get_answer
+    env = get_answer(answer_id)
+    if env is None:
+        raise HTTPException(status_code=404, detail="Answer not found")
+    return env.to_dict()
+
+
+@app.get("/intel/answers")
+def intel_list_answers(user_id: int = 1, limit: int = 20):
+    """List recent intelligence answers."""
+    from intel.storage import list_answers
+    return list_answers(user_id=user_id, limit=limit)

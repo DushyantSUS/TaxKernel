@@ -430,6 +430,110 @@
                     <div style="font-size: 0.75rem; color: var(--text-secondary);">One-time Zero-Trust PIN</div>
                 </div>
             </div>
+        <div class="panel" style="grid-column: 1 / -1; margin-top: 1.5rem;">
+            <div class="panel-header">
+                <div class="panel-title">🧠 Deterministic Tax Intelligence (Local & Auditable)</div>
+                <div style="font-size: 0.85rem; color: var(--emerald); font-weight: 600;">● Verified Offline Core</div>
+            </div>
+            <p style="color: var(--text-secondary); margin-bottom: 1rem; font-size: 0.95rem;">
+                Ask statutory, compliance, or scenario questions. Answers are deterministically audited: the calculation engine owns every number, backed by local statutory corpus citations.
+            </p>
+            <div style="display: flex; gap: 0.5rem; margin-bottom: 1rem;">
+                <input id="intelQueryInput" type="text" placeholder="e.g. Compare old vs new regime, or What is my advance tax?" style="flex: 1; padding: 0.75rem 1rem; border-radius: var(--radius-md); background: rgba(0,0,0,0.3); border: 1px solid var(--surface-border); color: var(--text-primary); font-size: 0.95rem;">
+                <button onclick="runIntelAsk()" class="btn btn-primary" style="background: var(--accent-primary); color: white; padding: 0.75rem 1.5rem; border-radius: var(--radius-md); border: none; cursor: pointer; font-weight: 600;">Ask Intelligence</button>
+            </div>
+            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1.5rem;">
+                <button onclick="setQuery('Compare old vs new regime')" class="btn btn-secondary" style="font-size: 0.8rem; padding: 0.35rem 0.75rem;">Compare Regimes</button>
+                <button onclick="setQuery('What is my current GST turnover and limit?')" class="btn btn-secondary" style="font-size: 0.8rem; padding: 0.35rem 0.75rem;">GST Threshold</button>
+                <button onclick="setQuery('When is my next advance tax installment due?')" class="btn btn-secondary" style="font-size: 0.8rem; padding: 0.35rem 0.75rem;">Advance Tax</button>
+                <button onclick="setQuery('What if my income is 60 lakhs?')" class="btn btn-secondary" style="font-size: 0.8rem; padding: 0.35rem 0.75rem;">Simulate ₹60L</button>
+            </div>
+
+            <!-- Progressive Disclosure Result Container -->
+            <div id="intelResultBox" style="display: none; background: rgba(0, 0, 0, 0.25); border: 1px solid var(--surface-border); border-radius: var(--radius-md); padding: 1.25rem;">
+                <!-- Level 1: Summary -->
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.75rem;">
+                    <h4 style="font-size: 1.1rem; color: var(--cyan);">Audited Answer</h4>
+                    <span id="intelBandBadge" style="font-size: 0.75rem; font-weight: 700; padding: 0.25rem 0.6rem; border-radius: 9999px;"></span>
+                </div>
+                <div id="intelAnswerText" style="font-size: 0.95rem; line-height: 1.6; margin-bottom: 1rem; color: var(--text-primary); white-space: pre-line;"></div>
+
+                <!-- Level 2: Reasoning & Statutory Citations -->
+                <details style="margin-bottom: 0.75rem; background: rgba(255, 255, 255, 0.03); border-radius: var(--radius-md); padding: 0.75rem;">
+                    <summary style="cursor: pointer; font-weight: 600; color: var(--text-secondary); font-size: 0.9rem;">📖 View Statutory Citations & Rules Fired</summary>
+                    <div id="intelCitationsList" style="margin-top: 0.5rem; font-size: 0.85rem; color: var(--text-secondary);"></div>
+                    <div id="intelRulesList" style="margin-top: 0.5rem; font-size: 0.85rem; color: var(--text-secondary);"></div>
+                </details>
+
+                <!-- Level 3: Raw Audited Numbers & Evidence -->
+                <details style="background: rgba(255, 255, 255, 0.03); border-radius: var(--radius-md); padding: 0.75rem;">
+                    <summary style="cursor: pointer; font-weight: 600; color: var(--text-secondary); font-size: 0.9rem;">🔍 Inspect Raw Audited Facts & Hashes</summary>
+                    <pre id="intelRawNumbers" style="margin-top: 0.5rem; font-size: 0.8rem; color: var(--cyan); overflow-x: auto; font-family: monospace;"></pre>
+                </details>
+            </div>
+        </div>
+
+        <script>
+            function setQuery(text) {
+                document.getElementById('intelQueryInput').value = text;
+                runIntelAsk();
+            }
+
+            async function runIntelAsk() {
+                const query = document.getElementById('intelQueryInput').value.trim();
+                if (!query) return;
+                const resultBox = document.getElementById('intelResultBox');
+                resultBox.style.display = 'block';
+                document.getElementById('intelAnswerText').textContent = 'Analyzing query against deterministic engines...';
+                
+                try {
+                    const res = await fetch('/intel/ask', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ query: query, user_id: 1 })
+                    });
+                    const data = await res.json();
+                    document.getElementById('intelAnswerText').textContent = data.answer || 'No answer rendered.';
+                    
+                    const badge = document.getElementById('intelBandBadge');
+                    badge.textContent = `CONFIDENCE: ${data.confidence}% (${data.band.toUpperCase()})`;
+                    if (data.band === 'high') {
+                        badge.style.background = 'rgba(16, 185, 129, 0.2)';
+                        badge.style.color = '#10b981';
+                    } else if (data.band === 'medium') {
+                        badge.style.background = 'rgba(245, 158, 11, 0.2)';
+                        badge.style.color = '#f59e0b';
+                    } else {
+                        badge.style.background = 'rgba(244, 63, 94, 0.2)';
+                        badge.style.color = '#f43f5e';
+                    }
+
+                    // Citations
+                    const cites = data.citations || [];
+                    document.getElementById('intelCitationsList').innerHTML = cites.length > 0 
+                        ? '<strong>Statutory Citations:</strong><ul style="margin-left: 1.2rem;">' + cites.map(c => `<li>${c.source} Section ${c.section} - ${c.title || ''}</li>`).join('') + '</ul>'
+                        : '<em>No external statutory citations referenced.</em>';
+
+                    // Rules fired
+                    const rules = data.rules_fired || [];
+                    document.getElementById('intelRulesList').innerHTML = rules.length > 0
+                        ? '<strong>Rules Fired:</strong> ' + rules.map(r => `${r.engine}.${r.fn}()`).join(', ')
+                        : '';
+
+                    // Raw Numbers
+                    document.getElementById('intelRawNumbers').textContent = JSON.stringify({
+                        numbers: data.numbers,
+                        evidence_refs: data.evidence_refs,
+                        intent: data.intent,
+                        created_at: data.created_at
+                    }, null, 2);
+
+                } catch (err) {
+                    document.getElementById('intelAnswerText').textContent = 'Error contacting intelligence core: ' + err.message;
+                }
+            }
+        </script>
+
         </div>
     </main>
 </body>
