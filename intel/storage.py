@@ -16,6 +16,19 @@ def _get_db() -> sqlite3.Connection:
     import database
 
     conn: sqlite3.Connection = database.get_db_connection()  # type: ignore[no-untyped-call]
+    conn.execute(
+        """
+        CREATE TABLE IF NOT EXISTS intel_answers (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL DEFAULT 1,
+            taxpayer_id INTEGER,
+            invoice_id INTEGER,
+            query TEXT NOT NULL,
+            envelope_json TEXT NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+        """
+    )
     return conn
 
 

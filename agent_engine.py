@@ -83,25 +83,26 @@ class TaxKernelAgentEngine:
             "Format your answer as simple text. Do not hallucinate external facts."
         )
         
-        try:
-            res = requests.post(
-                self.local_llm_url,
-                json={
-                    "messages": [{"role": "user", "content": prompt}],
-                    "max_tokens": 120,
-                    "temperature": 0.2
-                },
-                timeout=1.5
-            )
-            if res.status_code == 200:
-                explanation = res.json()["choices"][0]["message"]["content"].strip()
-                return {
-                    "source": "local_npu_llm",
-                    "steps": agent_steps,
-                    "explanation": explanation
-                }
-        except Exception:
-            pass
+        if os.environ.get("TAXKERNEL_LLM") == "1":
+            try:
+                res = requests.post(
+                    self.local_llm_url,
+                    json={
+                        "messages": [{"role": "user", "content": prompt}],
+                        "max_tokens": 120,
+                        "temperature": 0.2
+                    },
+                    timeout=1.5
+                )
+                if res.status_code == 200:
+                    explanation = res.json()["choices"][0]["message"]["content"].strip()
+                    return {
+                        "source": "local_npu_llm",
+                        "steps": agent_steps,
+                        "explanation": explanation
+                    }
+            except Exception:
+                pass
             
         # Local deterministic synthesis
         pct_gst = (total / tax_rules.TOTAL_GST_LIMIT) * 100.0

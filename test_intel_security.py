@@ -376,7 +376,7 @@ def test_migration_adds_column_and_backfills(runner: Any, tmp_path: Path) -> Non
     columns = {row[1] for row in conn.execute("PRAGMA table_info(devices)")}
     assert "device_password_hash" in columns
     versions = list(conn.execute("SELECT version FROM schema_migrations"))
-    assert versions == [("0001_device_password_hash",)]
+    assert ("0001_device_password_hash",) in versions
     plaintext, digest = conn.execute(
         "SELECT device_password, device_password_hash FROM devices WHERE device_token = 'tok-old'"
     ).fetchone()

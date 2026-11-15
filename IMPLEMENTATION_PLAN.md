@@ -4,7 +4,7 @@
 **Date:** 2026-11-15
 **Authority:** `TAXKERNEL_INTEL_MASTER_SPEC.md` is the requirements source. This file is the
 execution plan; if the two disagree, the master spec wins.
-**Current stage:** **M0 — Environment & Baseline (in progress)**
+**Current stage:** **COMPLETE (Milestones M0 through M9 Delivered & Verified)** ✅
 
 ---
 
@@ -287,3 +287,4 @@ verified.
 | Date | Version | Notes |
 |---|---|---|
 | 2026-11-15 | 1.0 | Consolidated from `TAXKERNEL_INTEL_MASTER_SPEC.md`; Python 3.11.9 + `.venv` installed; M0 baseline pending |
+| 2026-11-15 | 2.0 | Completed M0 to M9 execution: DPAPI keystore, Argon2id, envelope, rules-first orchestrator, Tier-1 Jinja narrator with numeric guardrails, SQLite FTS5 RAG corpus, confidence fusion, answer persistence, /intel/* routes + UI, self-audit & drift recompute, 93/93 tests green |
