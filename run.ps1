@@ -10,22 +10,31 @@ Write-Host ""
 
 # 1. Locate Python (with dynamic environment path recovery for newly installed packages)
 $pythonExe = "python"
-try {
-    $pythonVersion = python --version 2>&1
-    Write-Host "Found Python in PATH: $pythonVersion" -ForegroundColor Green
-} catch {
-    # Check default winget user path
-    $defaultWingetPath = "C:\Users\qcwor\AppData\Local\Programs\Python\Python311-arm64"
-    $localPythonExe = Join-Path $defaultWingetPath "python.exe"
-    
-    if (Test-Path $localPythonExe) {
-        Write-Host "Located newly installed Python at: $localPythonExe" -ForegroundColor Green
-        # Inject Python and Scripts directories into session PATH
-        $env:PATH = "$defaultWingetPath;" + (Join-Path $defaultWingetPath "Scripts") + ";" + $env:PATH
-        $pythonExe = $localPythonExe
+$pythonVersion = $null
+$pythonCmd = Get-Command python -ErrorAction SilentlyContinue
+if ($pythonCmd) {
+    $candidateVersion = (& python --version 2>&1 | Out-String).Trim()
+    if ($candidateVersion -match "^Python 3\.") {
+        $pythonVersion = $candidateVersion
+        Write-Host "Found Python in PATH: $pythonVersion" -ForegroundColor Green
+    }
+}
+
+if (-not $pythonVersion) {
+    # Check the winget user-scope install location for this account
+    $candidateRoots = @(
+        (Join-Path $env:LOCALAPPDATA "Programs\Python\Python311"),
+        (Join-Path $env:LOCALAPPDATA "Programs\Python\Python312")
+    )
+    $foundRoot = $candidateRoots | Where-Object { Test-Path (Join-Path $_ "python.exe") } | Select-Object -First 1
+
+    if ($foundRoot) {
+        Write-Host "Located newly installed Python at: $foundRoot" -ForegroundColor Green
+        $env:PATH = "$foundRoot;" + (Join-Path $foundRoot "Scripts") + ";" + $env:PATH
+        $pythonExe = Join-Path $foundRoot "python.exe"
     } else {
         Write-Host "[ERROR] Python was not found." -ForegroundColor Red
-        Write-Host "Please download and install Python 3.10+ (specifically the ARM64 version if on a Snapdragon PC)." -ForegroundColor Yellow
+        Write-Host "Install it with: winget install --id Python.Python.3.11 --exact" -ForegroundColor Yellow
         Write-Host "Ensure 'Add Python to PATH' is selected during installation." -ForegroundColor Yellow
         Exit
     }
@@ -61,6 +70,7 @@ Write-Host ""
 
 # 6. Launch Uvicorn Edge Hub
 Write-Host "Starting TaxKernel Edge Hub server at http://localhost:8000..." -ForegroundColor Cyan
+Write-Host "Presentation surface: http://localhost:8000/present" -ForegroundColor Cyan
 Write-Host "Make sure paired devices are on the same local network." -ForegroundColor Yellow
 Write-Host "Press Ctrl+C to terminate the server." -ForegroundColor Yellow
 Write-Host ""

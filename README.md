@@ -60,6 +60,7 @@ python -m venv .venv
 
 # 3. Open the dashboard
 #    http://localhost:8000
+#    Presentation surface: http://localhost:8000/present
 ```
 
 On first boot the app creates/uses `taxkernel_prod.db`, seeds a demo user/client, and
@@ -116,6 +117,7 @@ test_*.py               unittest suites
 | URL | Purpose |
 |---|---|
 | `/` | Freelancer dashboard — ledger state, tax, forecasts |
+| `/present` | Presentation pitch/demo — live engine snapshot, no DB access |
 | `/ca` | CA-firm portal — taxpayer roster, compliance matrix, notices |
 | `/capture` | Mobile-friendly invoice capture |
 | `/summary` | Shareable summary (QR) |

@@ -1,0 +1,2513 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TaxKernel — Local-first tax operating system</title>
+    <script>document.documentElement.classList.add("js");</script>
+    <meta name="description" content="TaxKernel presentation build: deterministic tax engines for India, with a guarded explanation layer. Every number is computed on this machine.">
+    <style>
+        :root {
+            --bg: #070b14;
+            --bg-elev: #0d1422;
+            --surface: rgba(17, 25, 41, 0.72);
+            --surface-solid: #111927;
+            --line: rgba(148, 163, 184, 0.16);
+            --line-strong: rgba(148, 163, 184, 0.28);
+            --text: #f1f5f9;
+            --muted: #94a3b8;
+            --faint: #64748b;
+            --indigo: #6366f1;
+            --indigo-soft: rgba(99, 102, 241, 0.16);
+            --cyan: #22d3ee;
+            --emerald: #34d399;
+            --amber: #fbbf24;
+            --rose: #fb7185;
+            --radius: 18px;
+            --radius-sm: 12px;
+            --shadow: 0 24px 60px -30px rgba(2, 6, 23, 0.9);
+            --font: "Segoe UI Variable Text", "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+            --display: "Segoe UI Variable Display", "Segoe UI Semibold", "Segoe UI", system-ui, sans-serif;
+            --mono: ui-monospace, "Cascadia Code", "SF Mono", Consolas, monospace;
+            --max: 1200px;
+        }
+
+        * { box-sizing: border-box; }
+
+        html { scroll-behavior: smooth; }
+
+        body {
+            margin: 0;
+            font-family: var(--font);
+            color: var(--text);
+            background: var(--bg);
+            line-height: 1.55;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        body::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            z-index: -3;
+            background:
+                radial-gradient(1200px 800px at 50% -8%, rgba(30, 41, 59, 0.55), transparent 62%),
+                linear-gradient(180deg, #070b14 0%, #05080f 100%);
+            pointer-events: none;
+        }
+
+        /* Floating aurora volumes — the colour bed for the glass surfaces */
+        .scene {
+            position: fixed;
+            inset: 0;
+            z-index: -2;
+            overflow: hidden;
+            pointer-events: none;
+            perspective: 1000px;
+        }
+
+        .orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(66px);
+            opacity: 0.7;
+            transition: transform 0.6s cubic-bezier(0.22, 0.61, 0.36, 1);
+            will-change: transform;
+        }
+
+        .orb-a {
+            width: 640px;
+            height: 640px;
+            left: -180px;
+            top: -240px;
+            background: radial-gradient(circle at 32% 32%, rgba(99, 102, 241, 0.8), transparent 66%);
+        }
+
+        .orb-b {
+            width: 540px;
+            height: 540px;
+            right: -140px;
+            top: 40px;
+            background: radial-gradient(circle at 62% 38%, rgba(34, 211, 238, 0.62), transparent 66%);
+        }
+
+        .orb-c {
+            width: 700px;
+            height: 700px;
+            left: 38%;
+            bottom: -440px;
+            background: radial-gradient(circle at 50% 50%, rgba(52, 211, 153, 0.42), transparent 66%);
+        }
+
+        .orb-d {
+            width: 560px;
+            height: 560px;
+            left: -260px;
+            top: 36%;
+            background: radial-gradient(circle at 42% 42%, rgba(129, 140, 248, 0.55), transparent 68%);
+            animation-duration: 42s;
+            animation-delay: -11s;
+        }
+
+        .orb-e {
+            width: 620px;
+            height: 620px;
+            right: -280px;
+            top: 52%;
+            background: radial-gradient(circle at 55% 50%, rgba(34, 211, 238, 0.42), transparent 68%);
+            animation-duration: 50s;
+            animation-delay: -22s;
+        }
+
+        .orb-f {
+            width: 520px;
+            height: 520px;
+            left: 18%;
+            top: 74%;
+            background: radial-gradient(circle at 50% 50%, rgba(52, 211, 153, 0.34), transparent 70%);
+            animation-duration: 46s;
+            animation-delay: -16s;
+        }
+
+        body::after {
+            content: "";
+            position: fixed;
+            inset: 0;
+            z-index: -1;
+            background-image:
+                linear-gradient(rgba(148, 163, 184, 0.045) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(148, 163, 184, 0.045) 1px, transparent 1px);
+            background-size: 64px 64px;
+            mask-image: radial-gradient(ellipse at 50% 0%, black, transparent 75%);
+            pointer-events: none;
+        }
+
+        a { color: inherit; }
+
+        h1, h2, h3, h4 { font-family: var(--display); line-height: 1.12; margin: 0; letter-spacing: -0.02em; }
+
+        p { margin: 0; }
+
+        :focus-visible {
+            outline: 3px solid rgba(34, 211, 238, 0.75);
+            outline-offset: 3px;
+            border-radius: 6px;
+        }
+
+        .skip {
+            position: absolute;
+            left: 16px;
+            top: -60px;
+            z-index: 999;
+            padding: 10px 16px;
+            background: var(--cyan);
+            color: #04121a;
+            font-weight: 700;
+            border-radius: 8px;
+            transition: top 0.2s ease;
+        }
+        .skip:focus { top: 16px; }
+
+        .wrap {
+            width: min(var(--max), calc(100% - 48px));
+            margin: 0 auto;
+        }
+
+        /* ---------- Header ---------- */
+        .site-header {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            backdrop-filter: blur(16px);
+            background: rgba(7, 11, 20, 0.78);
+            border-bottom: 1px solid var(--line);
+        }
+
+        .nav {
+            display: flex;
+            align-items: center;
+            gap: 28px;
+            padding: 14px 0;
+        }
+
+        .brand {
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+            flex-shrink: 0;
+        }
+
+        .brand-mark {
+            width: 40px;
+            height: 40px;
+            display: grid;
+            place-items: center;
+            border-radius: 12px;
+            font-family: var(--display);
+            font-weight: 800;
+            font-size: 17px;
+            letter-spacing: -0.04em;
+            color: #04121a;
+            background: linear-gradient(135deg, var(--cyan), var(--emerald));
+            box-shadow: 0 0 28px rgba(34, 211, 238, 0.28);
+        }
+
+        .brand-text { display: flex; flex-direction: column; line-height: 1.15; }
+        .brand-name { font-family: var(--display); font-weight: 700; font-size: 1.06rem; letter-spacing: -0.01em; }
+        .brand-sub { font-size: 0.63rem; letter-spacing: 0.16em; text-transform: uppercase; color: var(--faint); }
+
+        .nav-links { display: flex; gap: 4px; margin-left: auto; }
+
+        .nav-links a {
+            text-decoration: none;
+            color: var(--muted);
+            font-size: 0.88rem;
+            font-weight: 500;
+            padding: 8px 13px;
+            border-radius: 8px;
+            transition: color 0.18s ease, background 0.18s ease;
+        }
+
+        .nav-links a:hover { color: var(--text); background: rgba(148, 163, 184, 0.08); }
+
+        .nav-actions { display: flex; gap: 8px; }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 10px 18px;
+            border-radius: 10px;
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 600;
+            border: 1px solid transparent;
+            cursor: pointer;
+            transition: transform 0.16s ease, background 0.16s ease, border-color 0.16s ease;
+            font-family: var(--font);
+        }
+
+        .btn:hover { transform: translateY(-1px); }
+        .btn:active { transform: translateY(0); }
+
+        .btn.primary {
+            color: #04121a;
+            background: linear-gradient(135deg, #67e8f9, #34d399);
+            box-shadow: 0 12px 30px -14px rgba(34, 211, 238, 0.75);
+        }
+
+        .btn.ghost {
+            color: var(--text);
+            border-color: var(--line-strong);
+            background: rgba(148, 163, 184, 0.05);
+        }
+
+        .btn.ghost:hover { background: rgba(148, 163, 184, 0.11); }
+
+        .btn.small { padding: 8px 13px; font-size: 0.82rem; }
+
+        /* ---------- Hero ---------- */
+        .hero {
+            display: grid;
+            grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
+            gap: 56px;
+            align-items: center;
+            padding: 72px 0 48px;
+        }
+
+        .eyebrow {
+            display: inline-flex;
+            align-items: center;
+            gap: 9px;
+            font-size: 0.74rem;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+            color: var(--muted);
+            background: rgba(148, 163, 184, 0.07);
+            border: 1px solid var(--line);
+            border-radius: 999px;
+            padding: 7px 14px;
+            margin-bottom: 24px;
+        }
+
+        .pulse {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: var(--emerald);
+            box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.6);
+            animation: pulse 2.4s infinite;
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.55); }
+            70% { box-shadow: 0 0 0 9px rgba(52, 211, 153, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(52, 211, 153, 0); }
+        }
+
+        h1 {
+            font-size: clamp(2.1rem, 3.4vw, 2.95rem);
+            font-weight: 700;
+            margin-bottom: 22px;
+            text-wrap: balance;
+        }
+
+        .grad {
+            background: linear-gradient(100deg, #a5b4fc 0%, #67e8f9 52%, #6ee7b7 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            color: transparent;
+        }
+
+        .lede {
+            font-size: clamp(1rem, 1.5vw, 1.12rem);
+            color: var(--muted);
+            max-width: 58ch;
+            margin-bottom: 30px;
+        }
+
+        .hero-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 30px; }
+
+        .hero-trust {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px 22px;
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            font-size: 0.84rem;
+            color: var(--muted);
+        }
+
+        .hero-trust li { display: inline-flex; align-items: center; gap: 8px; }
+
+        .tick {
+            width: 16px;
+            height: 16px;
+            flex: 0 0 auto;
+            border-radius: 50%;
+            display: grid;
+            place-items: center;
+            background: rgba(52, 211, 153, 0.14);
+            color: var(--emerald);
+            font-size: 10px;
+            font-weight: 800;
+        }
+
+        /* ---------- Snapshot card ---------- */
+        .snapshot {
+            position: relative;
+            background: linear-gradient(180deg, rgba(23, 34, 55, 0.9), rgba(13, 20, 34, 0.92));
+            border: 1px solid var(--line-strong);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 24px;
+            overflow: hidden;
+        }
+
+        .snapshot::before {
+            content: "";
+            position: absolute;
+            inset: 0 0 auto;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(103, 232, 249, 0.7), transparent);
+        }
+
+        .snapshot-head {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .snapshot-title { font-family: var(--display); font-weight: 600; font-size: 1.02rem; }
+        .snapshot-sub { font-size: 0.74rem; color: var(--faint); margin-top: 3px; }
+
+        .live-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.68rem;
+            font-weight: 600;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: var(--emerald);
+            background: rgba(52, 211, 153, 0.1);
+            border: 1px solid rgba(52, 211, 153, 0.28);
+            border-radius: 999px;
+            padding: 5px 10px;
+            white-space: nowrap;
+        }
+
+        .snap-rows { display: grid; gap: 2px; }
+
+        .snap-row {
+            display: flex;
+            align-items: baseline;
+            justify-content: space-between;
+            gap: 16px;
+            padding: 13px 0;
+            border-bottom: 1px dashed rgba(148, 163, 184, 0.14);
+        }
+
+        .snap-row:last-child { border-bottom: 0; }
+
+        .snap-label { font-size: 0.83rem; color: var(--muted); display: flex; flex-direction: column; gap: 2px; }
+        .snap-label small { font-size: 0.68rem; color: var(--faint); }
+
+        .snap-value { font-family: var(--display); font-size: 1.2rem; font-weight: 600; text-align: right; letter-spacing: -0.01em; }
+        .snap-value.neg { color: var(--rose); }
+        .snap-value.pos { color: var(--emerald); }
+
+        .split {
+            margin-top: 16px;
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 10px;
+            font-size: 0.76rem;
+        }
+
+        .split-labels { display: flex; justify-content: space-between; color: var(--faint); margin-bottom: 6px; }
+        .mini-bar { height: 7px; border-radius: 999px; background: rgba(148, 163, 184, 0.16); overflow: hidden; display: flex; }
+        .mini-bar span { display: block; height: 100%; }
+
+        .snap-foot {
+            margin-top: 18px;
+            padding-top: 14px;
+            border-top: 1px solid var(--line);
+            font-size: 0.72rem;
+            color: var(--faint);
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .snap-foot code { font-family: var(--mono); font-size: 0.7rem; color: var(--muted); }
+
+        /* ---------- Strip ---------- */
+        .strip {
+            border-top: 1px solid var(--line);
+            border-bottom: 1px solid var(--line);
+            background: rgba(13, 20, 34, 0.45);
+        }
+
+        .strip-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 1px;
+            background: var(--line);
+        }
+
+        .strip-item {
+            background: var(--bg);
+            padding: 22px 20px;
+            display: flex;
+            gap: 14px;
+            align-items: flex-start;
+        }
+
+        .strip-icon {
+            width: 34px;
+            height: 34px;
+            flex: 0 0 auto;
+            border-radius: 9px;
+            display: grid;
+            place-items: center;
+            font-size: 15px;
+            background: var(--indigo-soft);
+            border: 1px solid rgba(99, 102, 241, 0.28);
+            color: #a5b4fc;
+        }
+
+        .strip-icon svg { width: 17px; height: 17px; }
+
+        .strip-item h3 { font-size: 0.88rem; margin-bottom: 3px; }
+        .strip-item p { font-size: 0.78rem; color: var(--faint); }
+
+        /* ---------- Sections ---------- */
+        .section { padding: 78px 0; }
+
+        .section-head { max-width: 62ch; margin-bottom: 36px; }
+
+        .kicker {
+            display: inline-block;
+            font-size: 0.72rem;
+            font-weight: 700;
+            letter-spacing: 0.16em;
+            text-transform: uppercase;
+            color: var(--cyan);
+            margin-bottom: 12px;
+        }
+
+        h2 { font-size: clamp(1.7rem, 3.2vw, 2.4rem); margin-bottom: 12px; }
+        .section-head p { color: var(--muted); font-size: 1rem; }
+
+        .provenance {
+            display: inline-flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 8px;
+            margin-top: 18px;
+            font-size: 0.76rem;
+            color: var(--faint);
+        }
+
+        .provenance code {
+            font-family: var(--mono);
+            color: var(--muted);
+            background: rgba(148, 163, 184, 0.07);
+            border: 1px solid var(--line);
+            border-radius: 6px;
+            padding: 2px 6px;
+            font-size: 0.72rem;
+        }
+
+        /* ---------- Story ---------- */
+        .story {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 16px;
+            margin-bottom: 34px;
+        }
+
+        .story-step {
+            position: relative;
+            padding: 20px;
+            border: 1px solid var(--line);
+            border-radius: var(--radius-sm);
+            background: rgba(15, 23, 38, 0.55);
+        }
+
+        .story-num {
+            font-family: var(--mono);
+            font-size: 0.72rem;
+            color: var(--cyan);
+            letter-spacing: 0.1em;
+            margin-bottom: 10px;
+        }
+
+        .story-step h3 { font-size: 1rem; margin-bottom: 6px; }
+        .story-step p { font-size: 0.84rem; color: var(--muted); }
+
+        /* ---------- Demo grid ---------- */
+        .demo-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 16px;
+        }
+
+        .card {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            padding: 20px;
+            background: var(--surface);
+            border: 1px solid var(--line);
+            border-radius: var(--radius);
+            box-shadow: 0 18px 40px -34px rgba(2, 6, 23, 0.9);
+            transition: border-color 0.2s ease, transform 0.2s ease;
+            min-width: 0;
+        }
+
+        .card:hover { border-color: var(--line-strong); transform: translateY(-2px); }
+
+        .card.wide { grid-column: span 2; }
+
+        .card-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+        }
+
+        .engine {
+            font-family: var(--mono);
+            font-size: 0.66rem;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            color: var(--faint);
+        }
+
+        .pill {
+            font-size: 0.66rem;
+            font-weight: 700;
+            letter-spacing: 0.07em;
+            text-transform: uppercase;
+            padding: 4px 9px;
+            border-radius: 999px;
+            border: 1px solid transparent;
+            white-space: nowrap;
+        }
+
+        .pill.rose { color: var(--rose); background: rgba(251, 113, 133, 0.1); border-color: rgba(251, 113, 133, 0.3); }
+        .pill.amber { color: var(--amber); background: rgba(251, 191, 36, 0.1); border-color: rgba(251, 191, 36, 0.3); }
+        .pill.emerald { color: var(--emerald); background: rgba(52, 211, 153, 0.1); border-color: rgba(52, 211, 153, 0.3); }
+        .pill.indigo { color: #a5b4fc; background: rgba(99, 102, 241, 0.13); border-color: rgba(99, 102, 241, 0.35); }
+        .pill.cyan { color: #67e8f9; background: rgba(34, 211, 238, 0.1); border-color: rgba(34, 211, 238, 0.3); }
+
+        .card h3 { font-size: 1rem; }
+
+        .metric { display: flex; align-items: baseline; gap: 6px; }
+        .metric-value { font-family: var(--display); font-size: 2rem; font-weight: 700; letter-spacing: -0.03em; line-height: 1; }
+        .metric-value.sm { font-size: 1.5rem; }
+        .metric-unit { font-size: 0.78rem; color: var(--faint); }
+
+        .muted { color: var(--muted); font-size: 0.84rem; }
+        .tiny { font-size: 0.74rem; color: var(--faint); }
+
+        .card-foot {
+            margin-top: auto;
+            padding-top: 12px;
+            border-top: 1px solid var(--line);
+            font-family: var(--mono);
+            font-size: 0.66rem;
+            color: var(--faint);
+            word-break: break-word;
+        }
+
+        .zone { display: grid; gap: 8px; }
+
+        .zone-bar { display: flex; height: 12px; border-radius: 999px; overflow: hidden; background: rgba(148, 163, 184, 0.14); }
+
+        .zone-green { background: linear-gradient(90deg, #10b981, #34d399); }
+        .zone-red { background: linear-gradient(90deg, #f43f5e, #fb7185); }
+
+        .zone-legend { display: flex; justify-content: space-between; gap: 10px; font-size: 0.74rem; color: var(--faint); }
+        .zone-legend b { color: var(--text); font-weight: 600; }
+
+        .zone-split { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+
+        .zone-box {
+            padding: 12px;
+            border-radius: 10px;
+            border: 1px solid var(--line);
+            background: rgba(7, 11, 20, 0.45);
+        }
+
+        .zone-box .zone-title { font-size: 0.68rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--faint); margin-bottom: 5px; }
+        .zone-box .zone-value { font-family: var(--display); font-weight: 600; font-size: 1.12rem; }
+        .zone-box.red .zone-value { color: var(--rose); }
+        .zone-box.green .zone-value { color: var(--emerald); }
+        .zone-box small { display: block; font-size: 0.7rem; color: var(--faint); margin-top: 3px; }
+
+        .callout {
+            display: flex;
+            gap: 10px;
+            align-items: flex-start;
+            padding: 11px 12px;
+            border-radius: 10px;
+            font-size: 0.78rem;
+            border: 1px solid rgba(251, 191, 36, 0.28);
+            background: rgba(251, 191, 36, 0.07);
+            color: #fde68a;
+        }
+
+        .callout.rose { border-color: rgba(251, 113, 133, 0.3); background: rgba(251, 113, 133, 0.08); color: #fecdd3; }
+        .callout.emerald { border-color: rgba(52, 211, 153, 0.28); background: rgba(52, 211, 153, 0.07); color: #a7f3d0; }
+        .callout strong { color: #fff; }
+
+        .gauge-wrap { display: flex; align-items: center; gap: 18px; }
+
+        .gauge {
+            position: relative;
+            width: 92px;
+            height: 92px;
+            flex: 0 0 auto;
+            border-radius: 50%;
+            background: conic-gradient(var(--cyan) calc(var(--pct, 0) * 1%), rgba(148, 163, 184, 0.14) 0);
+            display: grid;
+            place-items: center;
+        }
+
+        .gauge::before {
+            content: "";
+            position: absolute;
+            inset: 9px;
+            border-radius: 50%;
+            background: var(--surface-solid);
+        }
+
+        .gauge span { position: relative; font-family: var(--display); font-weight: 700; font-size: 1.05rem; }
+
+        .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+
+        .chip {
+            font-size: 0.69rem;
+            padding: 3px 8px;
+            border-radius: 999px;
+            background: rgba(148, 163, 184, 0.08);
+            border: 1px solid var(--line);
+            color: var(--muted);
+            font-family: var(--mono);
+        }
+
+        .chip.ok { color: #a7f3d0; border-color: rgba(52, 211, 153, 0.3); background: rgba(52, 211, 153, 0.08); }
+
+        .kv { display: grid; gap: 8px; }
+        .kv-row { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; font-size: 0.82rem; }
+        .kv-row span { color: var(--faint); }
+        .kv-row b { font-weight: 600; font-variant-numeric: tabular-nums; }
+
+        .barline { height: 6px; border-radius: 999px; background: rgba(148, 163, 184, 0.14); overflow: hidden; }
+        .barline span { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, var(--amber), #f59e0b); }
+
+        /* ---------- Simulator ---------- */
+        .sim {
+            display: grid;
+            grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
+            gap: 22px;
+            padding: 26px;
+            border: 1px solid var(--line-strong);
+            border-radius: var(--radius);
+            background: linear-gradient(140deg, rgba(23, 34, 55, 0.85), rgba(11, 17, 29, 0.9));
+        }
+
+        .sim label { font-size: 0.8rem; color: var(--muted); display: flex; justify-content: space-between; gap: 10px; }
+
+        .sim input[type="range"] {
+            width: 100%;
+            margin: 22px 0 10px;
+            accent-color: var(--cyan);
+            height: 26px;
+        }
+
+        .sim-scale { display: flex; justify-content: space-between; font-size: 0.7rem; color: var(--faint); font-family: var(--mono); }
+
+        .sim-out { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+
+        .sim-box {
+            padding: 16px;
+            border-radius: 12px;
+            border: 1px solid var(--line);
+            background: rgba(7, 11, 20, 0.5);
+        }
+
+        .sim-box .label { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.09em; color: var(--faint); }
+        .sim-box .value { font-family: var(--display); font-size: 1.45rem; font-weight: 700; margin-top: 6px; letter-spacing: -0.02em; }
+        .sim-box.preferred { border-color: rgba(52, 211, 153, 0.35); background: rgba(52, 211, 153, 0.06); }
+        .sim-box.preferred .value { color: var(--emerald); }
+
+        .sim-verdict {
+            grid-column: span 2;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 12px 16px;
+            border-radius: 12px;
+            background: rgba(99, 102, 241, 0.1);
+            border: 1px solid rgba(99, 102, 241, 0.3);
+            font-size: 0.84rem;
+        }
+
+        .sim-verdict b { color: #c7d2fe; }
+
+        /* ---------- Ask / guardrail ---------- */
+        .split-2 { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr); gap: 22px; align-items: start; }
+
+        .panel {
+            border: 1px solid var(--line);
+            border-radius: var(--radius);
+            background: var(--surface);
+            overflow: hidden;
+        }
+
+        .panel-head { padding: 20px 22px 0; }
+        .panel-head h3 { font-size: 1.02rem; }
+        .panel-head p { font-size: 0.8rem; color: var(--faint); margin-top: 5px; }
+
+        .question {
+            margin: 16px 22px 0;
+            padding: 14px 16px;
+            border-radius: 12px;
+            background: rgba(99, 102, 241, 0.09);
+            border: 1px solid rgba(99, 102, 241, 0.26);
+            font-size: 0.9rem;
+            color: #e0e7ff;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 4px;
+            padding: 16px 22px 0;
+            border-bottom: 1px solid var(--line);
+        }
+
+        .tab {
+            appearance: none;
+            border: 0;
+            background: transparent;
+            color: var(--muted);
+            font-family: var(--font);
+            font-size: 0.82rem;
+            font-weight: 600;
+            padding: 10px 12px;
+            border-radius: 8px 8px 0 0;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            margin-bottom: -1px;
+        }
+
+        .tab:hover { color: var(--text); }
+        .tab[aria-selected="true"] { color: var(--text); border-bottom-color: var(--cyan); }
+
+        .tab-panel { padding: 20px 22px 22px; }
+        .tab-panel[hidden] { display: none; }
+
+        .summary-list { display: grid; gap: 12px; list-style: none; padding: 0; margin: 0; }
+
+        .summary-list li {
+            display: grid;
+            grid-template-columns: 22px minmax(0, 1fr);
+            gap: 10px;
+            font-size: 0.88rem;
+            color: var(--muted);
+        }
+
+        .summary-list b { color: var(--text); font-weight: 600; }
+
+        .dot {
+            width: 22px;
+            height: 22px;
+            border-radius: 7px;
+            display: grid;
+            place-items: center;
+            font-family: var(--mono);
+            font-size: 0.66rem;
+            color: var(--cyan);
+            background: rgba(34, 211, 238, 0.1);
+            border: 1px solid rgba(34, 211, 238, 0.22);
+        }
+
+        .reasoning { list-style: none; padding: 0; margin: 0; display: grid; gap: 14px; }
+
+        .reasoning li {
+            display: grid;
+            grid-template-columns: 24px minmax(0, 1fr);
+            gap: 12px;
+            font-size: 0.85rem;
+            color: var(--muted);
+        }
+
+        .step-num {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: grid;
+            place-items: center;
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: #c7d2fe;
+            background: rgba(99, 102, 241, 0.18);
+            border: 1px solid rgba(99, 102, 241, 0.35);
+        }
+
+        .reasoning code {
+            font-family: var(--mono);
+            font-size: 0.73rem;
+            color: #a5b4fc;
+            background: rgba(99, 102, 241, 0.12);
+            border: 1px solid rgba(99, 102, 241, 0.25);
+            padding: 1px 5px;
+            border-radius: 4px;
+        }
+
+        .evidence-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; gap: 10px; }
+
+        pre.json {
+            margin: 0;
+            max-height: 320px;
+            overflow: auto;
+            padding: 14px;
+            border-radius: 10px;
+            background: #060a12;
+            border: 1px solid var(--line);
+            font-family: var(--mono);
+            font-size: 0.72rem;
+            line-height: 1.6;
+            color: #cbd5e1;
+            white-space: pre;
+            tab-size: 2;
+        }
+
+        .guard-list { list-style: none; padding: 0; margin: 16px 0 0; display: grid; gap: 10px; }
+
+        .guard-list li {
+            display: grid;
+            grid-template-columns: 18px minmax(0, 1fr);
+            gap: 9px;
+            font-size: 0.84rem;
+            color: var(--muted);
+        }
+
+        .guard-list .tick { margin-top: 2px; }
+        .guard-list b { color: var(--text); }
+
+        .refusal {
+            margin: 18px 22px 22px;
+            padding: 14px;
+            border-radius: 12px;
+            border: 1px dashed rgba(251, 113, 133, 0.35);
+            background: rgba(251, 113, 133, 0.05);
+            font-size: 0.82rem;
+            color: #fecdd3;
+        }
+
+        .refusal-tag {
+            display: inline-block;
+            font-family: var(--mono);
+            font-size: 0.66rem;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: var(--rose);
+            margin-bottom: 6px;
+        }
+
+        .numbers-demo { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+
+        .num {
+            font-family: var(--mono);
+            font-size: 0.76rem;
+            padding: 6px 10px;
+            border-radius: 8px;
+            border: 1px solid rgba(52, 211, 153, 0.28);
+            background: rgba(52, 211, 153, 0.07);
+            color: #a7f3d0;
+        }
+
+        .num.bad {
+            border-color: rgba(251, 113, 133, 0.35);
+            background: rgba(251, 113, 133, 0.07);
+            color: #fecdd3;
+            text-decoration: line-through;
+        }
+
+        /* ---------- Pipeline ---------- */
+        .pipeline {
+            display: grid;
+            grid-template-columns: repeat(5, minmax(0, 1fr));
+            gap: 10px;
+            margin-bottom: 40px;
+        }
+
+        .stage {
+            position: relative;
+            padding: 18px 16px;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--line);
+            background: rgba(15, 23, 38, 0.6);
+            min-width: 0;
+        }
+
+        .stage::after {
+            content: "→";
+            position: absolute;
+            right: -9px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--faint);
+            font-size: 0.8rem;
+            z-index: 2;
+        }
+
+        .stage:last-child::after { content: ""; }
+
+        .stage .stage-step { font-family: var(--mono); font-size: 0.64rem; color: var(--faint); letter-spacing: 0.1em; margin-bottom: 8px; }
+        .stage h4 { font-size: 0.9rem; margin-bottom: 5px; }
+        .stage p { font-size: 0.75rem; color: var(--faint); }
+
+        /* ---------- Roadmap ---------- */
+        .milestones { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; }
+
+        .milestone {
+            padding: 14px;
+            border-radius: 12px;
+            border: 1px solid var(--line);
+            background: rgba(13, 20, 34, 0.55);
+            min-width: 0;
+        }
+
+        .milestone .id { font-family: var(--mono); font-size: 0.68rem; color: var(--faint); margin-bottom: 6px; }
+        .milestone h4 { font-size: 0.82rem; margin-bottom: 6px; }
+        .milestone p { font-size: 0.72rem; color: var(--faint); }
+        .milestone.now { border-color: rgba(34, 211, 238, 0.4); background: rgba(34, 211, 238, 0.06); }
+        .milestone.now .id { color: var(--cyan); }
+        .milestone.done { border-color: rgba(52, 211, 153, 0.3); background: rgba(52, 211, 153, 0.05); }
+        .milestone.done .id { color: var(--emerald); }
+
+        /* ---------- Footer ---------- */
+        footer {
+            border-top: 1px solid var(--line);
+            padding: 34px 0 46px;
+            margin-top: 20px;
+            background: rgba(7, 11, 20, 0.6);
+        }
+
+        .foot-grid { display: flex; justify-content: space-between; gap: 26px; flex-wrap: wrap; align-items: flex-start; }
+
+        .foot-note { font-size: 0.78rem; color: var(--faint); max-width: 62ch; }
+        .foot-links { display: flex; gap: 18px; flex-wrap: wrap; font-size: 0.8rem; }
+        .foot-links a { color: var(--muted); text-decoration: none; }
+        .foot-links a:hover { color: var(--text); text-decoration: underline; }
+
+        /* ============================================================
+           Depth + glass layer
+           Layered translucency, rim light, pointer tilt and parallax.
+           All effects are progressive: no JS or reduced motion still
+           renders a complete, legible page.
+           ============================================================ */
+        :root {
+            --glass-edge: rgba(148, 163, 184, 0.22);
+            --glass-rim: inset 0 1px 0 rgba(255, 255, 255, 0.12), inset 0 -1px 0 rgba(2, 6, 23, 0.55);
+            --glass-fill: linear-gradient(160deg, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.015) 40%, rgba(255, 255, 255, 0) 64%);
+            --glass-body: linear-gradient(180deg, rgba(22, 33, 54, 0.74), rgba(10, 16, 28, 0.80));
+            --shadow-deep: 0 40px 90px -50px rgba(2, 6, 23, 0.95);
+        }
+
+        .scene::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(120% 85% at 50% 0%, transparent 42%, rgba(3, 6, 12, 0.6) 100%);
+        }
+
+        .orb {
+            display: block;
+            transform: translate3d(var(--mx, 0px), var(--my, 0px), 0);
+            animation: orbDrift 30s ease-in-out infinite alternate;
+        }
+
+        .orb-b { animation-duration: 38s; animation-delay: -8s; }
+        .orb-c { animation-duration: 46s; animation-delay: -16s; }
+
+        @keyframes orbDrift {
+            from { translate: 0 0; }
+            to { translate: 46px -34px; }
+        }
+
+        /* ---------- Header / nav ---------- */
+        .site-header {
+            background: linear-gradient(180deg, rgba(9, 14, 25, 0.84), rgba(7, 11, 20, 0.66));
+            border-bottom: 1px solid rgba(148, 163, 184, 0.14);
+            backdrop-filter: blur(22px) saturate(160%);
+            -webkit-backdrop-filter: blur(22px) saturate(160%);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+            transition: background 0.25s ease, box-shadow 0.25s ease;
+        }
+
+        .site-header.is-scrolled {
+            background: linear-gradient(180deg, rgba(9, 14, 25, 0.92), rgba(7, 11, 20, 0.8));
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 22px 46px -34px rgba(2, 6, 23, 0.95);
+        }
+
+        .nav-links a {
+            transition: color 0.18s ease, background 0.18s ease, box-shadow 0.18s ease;
+        }
+
+        .nav-links a:hover {
+            background: linear-gradient(180deg, rgba(148, 163, 184, 0.16), rgba(148, 163, 184, 0.06));
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.10);
+        }
+
+        .brand-mark {
+            background: linear-gradient(145deg, #a5f3fc, #22d3ee 40%, #34d399);
+            box-shadow:
+                inset 0 1px 0 rgba(255, 255, 255, 0.75),
+                inset 0 -2px 6px rgba(4, 18, 26, 0.35),
+                0 10px 24px -10px rgba(34, 211, 238, 0.7);
+        }
+
+        /* ---------- Buttons ---------- */
+        .btn {
+            position: relative;
+            isolation: isolate;
+            overflow: hidden;
+            transition: transform 0.18s ease, background 0.18s ease, border-color 0.18s ease, box-shadow 0.2s ease;
+        }
+
+        .btn::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            z-index: -1;
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.30), rgba(255, 255, 255, 0) 56%);
+            pointer-events: none;
+        }
+
+        .btn.primary {
+            background: linear-gradient(145deg, #a5f3fc 0%, #67e8f9 34%, #34d399 100%);
+            box-shadow:
+                inset 0 1px 0 rgba(255, 255, 255, 0.85),
+                inset 0 -2px 8px rgba(6, 78, 59, 0.28),
+                0 16px 34px -16px rgba(34, 211, 238, 0.85),
+                0 2px 8px rgba(2, 6, 23, 0.5);
+        }
+
+        .btn.ghost {
+            background: linear-gradient(180deg, rgba(148, 163, 184, 0.14), rgba(148, 163, 184, 0.04));
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            box-shadow:
+                inset 0 1px 0 rgba(255, 255, 255, 0.10),
+                0 10px 24px -18px rgba(2, 6, 23, 0.9);
+        }
+
+        .btn.ghost::after {
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.10), transparent 62%);
+        }
+
+        .btn:hover { transform: translateY(-2px); }
+
+        .btn.primary:hover {
+            box-shadow:
+                inset 0 1px 0 rgba(255, 255, 255, 0.9),
+                inset 0 -2px 8px rgba(6, 78, 59, 0.24),
+                0 20px 40px -16px rgba(34, 211, 238, 0.95),
+                0 2px 10px rgba(2, 6, 23, 0.55);
+        }
+
+        .btn:active { transform: translateY(0) scale(0.985); }
+
+        /* ---------- Eyebrow + chips ---------- */
+        .eyebrow {
+            background: linear-gradient(180deg, rgba(148, 163, 184, 0.14), rgba(148, 163, 184, 0.045));
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.10), 0 10px 24px -18px rgba(2, 6, 23, 0.9);
+        }
+
+        .pill,
+        .chip,
+        .num {
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.09);
+        }
+
+        /* ---------- Hero snapshot plate ---------- */
+        .snapshot {
+            --rx: 0deg;
+            --ry: 0deg;
+            background:
+                radial-gradient(120% 95% at 10% 0%, rgba(99, 102, 241, 0.22), transparent 56%),
+                radial-gradient(95% 75% at 100% 6%, rgba(34, 211, 238, 0.16), transparent 58%),
+                linear-gradient(160deg, rgba(24, 36, 58, 0.86), rgba(9, 14, 26, 0.90));
+            border: 1px solid rgba(148, 163, 184, 0.28);
+            box-shadow:
+                inset 0 1px 0 rgba(255, 255, 255, 0.16),
+                inset 0 -1px 0 rgba(2, 6, 23, 0.6),
+                var(--shadow-deep),
+                0 0 70px -34px rgba(34, 211, 238, 0.5);
+            backdrop-filter: blur(24px) saturate(150%);
+            -webkit-backdrop-filter: blur(24px) saturate(150%);
+            transform: perspective(1200px) rotateX(var(--rx)) rotateY(var(--ry));
+            transform-origin: 58% 42%;
+            transition: transform 0.6s cubic-bezier(0.22, 0.61, 0.36, 1), box-shadow 0.4s ease;
+        }
+
+        .snapshot::before {
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(165, 243, 252, 0.9), rgba(110, 231, 183, 0.55), transparent);
+        }
+
+        .live-chip {
+            background: linear-gradient(180deg, rgba(52, 211, 153, 0.18), rgba(52, 211, 153, 0.07));
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14), 0 0 18px -6px rgba(52, 211, 153, 0.5);
+        }
+
+        .mini-bar,
+        .barline,
+        .zone-bar {
+            box-shadow: inset 0 1px 2px rgba(2, 6, 23, 0.65);
+        }
+
+        /* ---------- Trust strip ---------- */
+        .strip {
+            background: linear-gradient(180deg, rgba(13, 20, 34, 0.66), rgba(8, 13, 23, 0.58));
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+        }
+
+        .strip-grid { background: rgba(148, 163, 184, 0.12); }
+
+        .strip-item {
+            background: linear-gradient(180deg, rgba(17, 25, 41, 0.68), rgba(10, 16, 28, 0.52));
+        }
+
+        .strip-icon {
+            background: linear-gradient(160deg, rgba(99, 102, 241, 0.34), rgba(99, 102, 241, 0.10));
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.22), 0 8px 18px -12px rgba(99, 102, 241, 0.9);
+        }
+
+        /* ---------- Story / pipeline / roadmap ---------- */
+        .story-step,
+        .stage,
+        .milestone {
+            background:
+                var(--glass-fill),
+                linear-gradient(180deg, rgba(18, 27, 45, 0.70), rgba(9, 14, 26, 0.74));
+            border-color: var(--glass-edge);
+            box-shadow:
+                inset 0 1px 0 rgba(255, 255, 255, 0.10),
+                0 26px 52px -40px rgba(2, 6, 23, 0.95);
+            backdrop-filter: blur(14px) saturate(140%);
+            -webkit-backdrop-filter: blur(14px) saturate(140%);
+        }
+
+        .milestone.now {
+            border-color: rgba(34, 211, 238, 0.45);
+            background:
+                radial-gradient(120% 100% at 50% 0%, rgba(34, 211, 238, 0.18), transparent 62%),
+                linear-gradient(180deg, rgba(18, 32, 48, 0.78), rgba(9, 16, 28, 0.78));
+            box-shadow:
+                inset 0 1px 0 rgba(255, 255, 255, 0.16),
+                0 0 40px -22px rgba(34, 211, 238, 0.8);
+        }
+
+        .milestone.done {
+            border-color: rgba(52, 211, 153, 0.35);
+            background:
+                radial-gradient(120% 100% at 50% 0%, rgba(52, 211, 153, 0.14), transparent 62%),
+                linear-gradient(180deg, rgba(16, 32, 40, 0.78), rgba(9, 16, 26, 0.78));
+        }
+
+        /* ---------- Demo cards: 3D tilt + pointer glare ---------- */
+        .card {
+            --rx: 0deg;
+            --ry: 0deg;
+            --lift: 0px;
+            --z: 0px;
+            background:
+                var(--glass-fill),
+                var(--glass-body);
+            border: 1px solid rgba(148, 163, 184, 0.20);
+            box-shadow:
+                inset 0 1px 0 rgba(255, 255, 255, 0.12),
+                inset 0 -1px 0 rgba(2, 6, 23, 0.5),
+                0 30px 60px -46px rgba(2, 6, 23, 0.95);
+            backdrop-filter: blur(16px) saturate(140%);
+            -webkit-backdrop-filter: blur(16px) saturate(140%);
+            transform: perspective(1100px) rotateX(var(--rx)) rotateY(var(--ry)) translate3d(0, var(--lift), var(--z));
+            transform-style: preserve-3d;
+            transition: transform 0.55s cubic-bezier(0.22, 0.61, 0.36, 1), border-color 0.25s ease, box-shadow 0.3s ease;
+        }
+
+        .card::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            border-radius: inherit;
+            background: radial-gradient(420px circle at var(--gx, 50%) var(--gy, 0%), rgba(255, 255, 255, 0.18), transparent 46%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            pointer-events: none;
+        }
+
+        @media (hover: hover) and (pointer: fine) {
+            .card:hover {
+                --lift: -5px;
+                --z: 24px;
+                z-index: 2;
+                border-color: rgba(148, 163, 184, 0.36);
+                transform: perspective(1100px) rotateX(var(--rx)) rotateY(var(--ry)) translate3d(0, var(--lift), var(--z));
+                box-shadow:
+                    inset 0 1px 0 rgba(255, 255, 255, 0.18),
+                    inset 0 -1px 0 rgba(2, 6, 23, 0.5),
+                    0 44px 84px -50px rgba(2, 6, 23, 1),
+                    0 0 0 1px rgba(34, 211, 238, 0.06);
+            }
+
+            .card:hover::after { opacity: 1; }
+        }
+
+        .card.is-tilting {
+            transition: transform 0.12s linear, border-color 0.25s ease, box-shadow 0.3s ease;
+        }
+
+        .card-top .engine { text-shadow: 0 0 18px rgba(148, 163, 184, 0.25); }
+
+        /* ---------- Simulator ---------- */
+        .sim {
+            background:
+                radial-gradient(90% 120% at 0% 0%, rgba(99, 102, 241, 0.16), transparent 52%),
+                linear-gradient(160deg, rgba(24, 36, 58, 0.82), rgba(9, 14, 26, 0.86));
+            border-color: rgba(148, 163, 184, 0.24);
+            backdrop-filter: blur(20px) saturate(150%);
+            -webkit-backdrop-filter: blur(20px) saturate(150%);
+            box-shadow:
+                inset 0 1px 0 rgba(255, 255, 255, 0.14),
+                var(--shadow-deep);
+        }
+
+        .sim-box,
+        .zone-box {
+            background: linear-gradient(180deg, rgba(148, 163, 184, 0.09), rgba(7, 11, 20, 0.38));
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.07), 0 14px 30px -26px rgba(2, 6, 23, 0.9);
+        }
+
+        .sim-box.preferred {
+            background: linear-gradient(180deg, rgba(52, 211, 153, 0.14), rgba(52, 211, 153, 0.04));
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14), 0 0 34px -20px rgba(52, 211, 153, 0.9);
+        }
+
+        .sim-verdict {
+            background: linear-gradient(180deg, rgba(99, 102, 241, 0.18), rgba(99, 102, 241, 0.08));
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14), 0 16px 34px -28px rgba(99, 102, 241, 0.9);
+        }
+
+        .sim input[type="range"] {
+            -webkit-appearance: none;
+            appearance: none;
+            background: transparent;
+        }
+
+        .sim input[type="range"]::-webkit-slider-runnable-track {
+            height: 8px;
+            border-radius: 999px;
+            background: linear-gradient(90deg, rgba(34, 211, 238, 0.75), rgba(99, 102, 241, 0.45));
+            box-shadow: inset 0 1px 3px rgba(2, 6, 23, 0.8), inset 0 -1px 0 rgba(255, 255, 255, 0.12);
+        }
+
+        .sim input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 22px;
+            height: 22px;
+            margin-top: -7px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 34% 28%, #ffffff, #a5f3fc 46%, #22d3ee 100%);
+            box-shadow: 0 8px 18px -6px rgba(34, 211, 238, 0.95), inset 0 0 0 1px rgba(255, 255, 255, 0.65);
+            cursor: pointer;
+        }
+
+        .sim input[type="range"]::-moz-range-track {
+            height: 8px;
+            border-radius: 999px;
+            background: linear-gradient(90deg, rgba(34, 211, 238, 0.75), rgba(99, 102, 241, 0.45));
+        }
+
+        .sim input[type="range"]::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border: 0;
+            border-radius: 50%;
+            background: radial-gradient(circle at 34% 28%, #ffffff, #a5f3fc 46%, #22d3ee 100%);
+            box-shadow: 0 8px 18px -6px rgba(34, 211, 238, 0.95);
+        }
+
+        /* ---------- Panels, tabs, evidence ---------- */
+        .panel {
+            position: relative;
+            background:
+                var(--glass-fill),
+                linear-gradient(180deg, rgba(19, 29, 48, 0.80), rgba(9, 14, 26, 0.84));
+            border-color: var(--glass-edge);
+            box-shadow:
+                inset 0 1px 0 rgba(255, 255, 255, 0.12),
+                var(--shadow-deep);
+            backdrop-filter: blur(20px) saturate(150%);
+            -webkit-backdrop-filter: blur(20px) saturate(150%);
+        }
+
+        .question {
+            background: linear-gradient(180deg, rgba(99, 102, 241, 0.18), rgba(99, 102, 241, 0.07));
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12), 0 18px 36px -30px rgba(99, 102, 241, 0.85);
+        }
+
+        .tabs {
+            background: linear-gradient(180deg, rgba(148, 163, 184, 0.07), transparent);
+        }
+
+        .tab {
+            transition: color 0.18s ease, background 0.18s ease, box-shadow 0.18s ease;
+        }
+
+        .tab:hover { background: rgba(148, 163, 184, 0.08); }
+
+        .tab[aria-selected="true"] {
+            background: linear-gradient(180deg, rgba(34, 211, 238, 0.14), rgba(34, 211, 238, 0.03));
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12), 0 -1px 0 rgba(34, 211, 238, 0.5) inset;
+        }
+
+        pre.json {
+            background: linear-gradient(180deg, rgba(10, 16, 27, 0.95), rgba(5, 9, 16, 0.98));
+            border-color: rgba(148, 163, 184, 0.2);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), inset 0 12px 30px -22px rgba(34, 211, 238, 0.4);
+        }
+
+        .refusal {
+            background: linear-gradient(180deg, rgba(251, 113, 133, 0.10), rgba(251, 113, 133, 0.04));
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 20px 40px -34px rgba(251, 113, 133, 0.8);
+        }
+
+        .callout {
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.10);
+        }
+
+        /* ---------- Gauge gloss ---------- */
+        .gauge {
+            box-shadow:
+                inset 0 1px 0 rgba(255, 255, 255, 0.35),
+                0 14px 30px -18px rgba(34, 211, 238, 0.65);
+        }
+
+        .gauge::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            border-radius: 50%;
+            background: radial-gradient(circle at 32% 22%, rgba(255, 255, 255, 0.30), transparent 46%);
+            mix-blend-mode: screen;
+            pointer-events: none;
+        }
+
+        .gauge span { z-index: 1; }
+
+        /* ---------- Footer ---------- */
+        footer {
+            background: linear-gradient(180deg, rgba(7, 11, 20, 0.55), rgba(5, 8, 15, 0.72));
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
+
+
+        /* ---------- Reveal ---------- */
+        /* Uses the independent `translate` property so it composes with the
+           3D `transform` used by cards and the snapshot plate. */
+        .js [data-reveal] {
+            opacity: 0;
+            translate: 0 16px;
+            transition: opacity 0.6s ease, translate 0.6s cubic-bezier(0.22, 0.61, 0.36, 1);
+        }
+        .js [data-reveal].in { opacity: 1; translate: 0 0; }
+
+        @media (prefers-reduced-motion: reduce) {
+            html { scroll-behavior: auto; }
+            *, *::before, *::after { animation: none !important; transition: none !important; }
+            [data-reveal] { opacity: 1 !important; transform: none !important; translate: none !important; }
+            .orb { transform: none !important; }
+            .snapshot, .card { transform: none !important; }
+            .card::after { display: none; }
+        }
+
+        @media print {
+            [data-reveal] { opacity: 1 !important; transform: none !important; translate: none !important; }
+            .site-header { position: static; }
+            .scene { display: none; }
+            .card, .snapshot, .panel, .sim, .story-step, .stage, .milestone, .strip, footer {
+                backdrop-filter: none;
+                -webkit-backdrop-filter: none;
+                box-shadow: none;
+            }
+        }
+
+        /* ---------- Responsive ---------- */
+        @media (max-width: 1080px) {
+            .hero { grid-template-columns: 1fr; gap: 36px; padding-top: 54px; }
+            .demo-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            .pipeline { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+            .stage::after { content: ""; }
+            .milestones { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+        }
+
+        @media (max-width: 900px) {
+            .nav-links { display: none; }
+            .strip-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            .split-2, .sim { grid-template-columns: 1fr; }
+            .story { grid-template-columns: 1fr; }
+        }
+
+        @media (max-width: 640px) {
+            .wrap { width: calc(100% - 32px); }
+            .nav-actions .ghost { display: none; }
+            .card.wide { grid-column: span 1; }
+            .demo-grid { grid-template-columns: 1fr; }
+            .strip-grid { grid-template-columns: 1fr; }
+            .section { padding: 56px 0; }
+            .sim-out { grid-template-columns: 1fr; }
+            .sim-verdict { grid-column: span 1; }
+            .pipeline, .milestones { grid-template-columns: 1fr; }
+            .gauge-wrap { flex-direction: column; align-items: flex-start; }
+            .orb { filter: blur(58px); }
+            .card, .snapshot, .sim, .panel { backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
+        }
+    </style>
+</head>
+<body>
+<div class="scene" aria-hidden="true">
+    <span class="orb orb-a"></span>
+    <span class="orb orb-b"></span>
+    <span class="orb orb-c"></span>
+    <span class="orb orb-d"></span>
+    <span class="orb orb-e"></span>
+    <span class="orb orb-f"></span>
+</div>
+<a class="skip" href="#main">Skip to presentation</a>
+
+<header class="site-header">
+    <div class="wrap nav">
+        <a class="brand" href="/present" aria-label="TaxKernel presentation home">
+            <span class="brand-mark" aria-hidden="true">TK</span>
+            <span class="brand-text">
+                <span class="brand-name">TaxKernel</span>
+                <span class="brand-sub">Local-first tax OS</span>
+            </span>
+        </a>
+        <nav class="nav-links" aria-label="Presentation sections">
+            <a href="#snapshot">Snapshot</a>
+            <a href="#demo">Live demo</a>
+            <a href="#simulator">What-if</a>
+            <a href="#guardrails">Guardrails</a>
+            <a href="#roadmap">Roadmap</a>
+        </nav>
+        <div class="nav-actions">
+            <a class="btn ghost small" href="/ca">CA portal</a>
+            <a class="btn primary small" href="/">Open dashboard</a>
+        </div>
+    </div>
+</header>
+
+<main id="main">
+
+    <!-- ============ HERO ============ -->
+    <section class="wrap hero">
+        <div class="hero-copy" data-reveal>
+            <p class="eyebrow"><span class="pulse" aria-hidden="true"></span> Presentation build · {{ snap.meta.fy }}</p>
+            <h1>Every rupee accounted for.<br><span class="grad">Every number defensible.</span></h1>
+            <p class="lede">
+                TaxKernel is a local-first tax operating system for Indian freelancers and CA firms.
+                Deterministic engines compute GST, TDS, transfer pricing and advance tax on this machine.
+                A guarded narration layer explains the result — and is never allowed to invent a figure.
+            </p>
+            <div class="hero-actions">
+                <a class="btn primary" href="#demo">See it computed live</a>
+                <a class="btn ghost" href="#guardrails">How answers are guarded</a>
+            </div>
+            <ul class="hero-trust">
+                <li><span class="tick" aria-hidden="true">✓</span> No cloud, no telemetry</li>
+                <li><span class="tick" aria-hidden="true">✓</span> AES-256-GCM at rest</li>
+                <li><span class="tick" aria-hidden="true">✓</span> Merkle-proofed ledger</li>
+                <li><span class="tick" aria-hidden="true">✓</span> Offline by default</li>
+            </ul>
+        </div>
+
+        <aside class="snapshot" id="snapshot" data-reveal aria-labelledby="snapshot-title">
+            <div class="snapshot-head">
+                <div>
+                    <div class="snapshot-title" id="snapshot-title">Live snapshot</div>
+                    <div class="snapshot-sub">Computed on this machine, just now</div>
+                </div>
+                <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 8px;">
+                    <span class="live-chip"><span class="pulse" aria-hidden="true"></span> Engine output</span>
+                    <button class="btn ghost small" type="button" id="refresh-snapshot">Refresh</button>
+                </div>
+            </div>
+
+            <div class="snap-rows">
+                <div class="snap-row">
+                    <div class="snap-label">Receipts booked<small>6 sample invoices · {{ snap.meta.fy }}</small></div>
+                    <div class="snap-value">₹<span data-snap="receipts">{{ snap.receipts.total_display }}</span></div>
+                </div>
+                <div class="snap-row">
+                    <div class="snap-label">44ADA tax liability<small>New regime, with 4% cess</small></div>
+                    <div class="snap-value">₹<span data-snap="tax">{{ snap.regime.new_tax_display }}</span></div>
+                </div>
+                <div class="snap-row">
+                    <div class="snap-label">AIS match rate<small>Books reconciled against 7 AIS entries</small></div>
+                    <div class="snap-value pos"><span data-snap="ais">{{ snap.ais.confidence_pct }}</span>%</div>
+                </div>
+                <div class="snap-row">
+                    <div class="snap-label">Scrutiny risk<small>Variance + unmatched-entry composite</small></div>
+                    <div class="snap-value neg"><span data-snap="risk">{{ snap.ais.scrutiny_risk_pct }}</span>%</div>
+                </div>
+            </div>
+
+            <div class="split">
+                <div>
+                    <div class="split-labels"><span>Paid</span><span>₹{{ snap.receipts.paid_display }}</span></div>
+                    <div class="mini-bar" role="img" aria-label="{{ snap.receipts.paid_share_pct }} percent of receipts collected">
+                        <span class="zone-green" style="width: {{ snap.receipts.paid_share_pct }}%"></span>
+                    </div>
+                </div>
+                <div>
+                    <div class="split-labels"><span>Unpaid</span><span>₹{{ snap.receipts.unpaid_display }}</span></div>
+                    <div class="mini-bar" role="img" aria-label="{{ 100 - snap.receipts.paid_share_pct }} percent of receipts outstanding">
+                        <span class="zone-red" style="width: {{ 100 - snap.receipts.paid_share_pct }}%"></span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="snap-foot">
+                <span><code>{{ snap.meta.ledger }}</code></span>
+                <span>Generated {{ snap.meta.generated_at }}</span>
+            </div>
+        </aside>
+    </section>
+
+    <!-- ============ TRUST STRIP ============ -->
+    <section class="strip" aria-label="Design principles">
+        <div class="wrap">
+            <div class="strip-grid">
+                <div class="strip-item">
+                    <span class="strip-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11 12 3l9 8"/><path d="M5 9.5V21h14V9.5"/></svg>
+                    </span>
+                    <div>
+                        <h3>Local-first</h3>
+                        <p>SQLite and keys stay on the device. No third-party reads.</p>
+                    </div>
+                </div>
+                <div class="strip-item">
+                    <span class="strip-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+                    </span>
+                    <div>
+                        <h3>Deterministic core</h3>
+                        <p>Engines own every number. Same input, same output, every time.</p>
+                    </div>
+                </div>
+                <div class="strip-item">
+                    <span class="strip-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v5c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6l7-3z"/><path d="m9 12 2 2 4-4"/></svg>
+                    </span>
+                    <div>
+                        <h3>Tamper-evident</h3>
+                        <p>Merkle roots and an approval hash chain over an append-only ledger.</p>
+                    </div>
+                </div>
+                <div class="strip-item">
+                    <span class="strip-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M6 18 18 6"/></svg>
+                    </span>
+                    <div>
+                        <h3>Refusal is valid</h3>
+                        <p>Missing citation or an unknown number produces a refusal, not a guess.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============ LIVE DEMO ============ -->
+    <section class="wrap section" id="demo">
+        <div class="section-head">
+            <span class="kicker">Live demo</span>
+            <h2>Not a mock-up. The real engines, running now.</h2>
+            <p>
+                A sample freelancer ledger is held in memory and pushed through the same functions the
+                application ships with. Nothing is hard-coded on this page; the database is never touched.
+            </p>
+            <div class="provenance">
+                <span>Source</span>
+                <code>present_demo.py</code>
+                <span>→</span>
+                <code>tax_rules</code>
+                <code>gst_engine</code>
+                <code>ais_engine</code>
+                <code>classifier_engine</code>
+                <code>forecast_engine</code>
+            </div>
+        </div>
+
+        <div class="story">
+            <div class="story-step" data-reveal>
+                <div class="story-num">01 / DETECT</div>
+                <h3>Catch what the ledger hides</h3>
+                <p>The ₹{{ snap.gst.threshold_display }} GST crossing, the ₹{{ snap.accrual.red_zone_display }} accrual tax gap, and ₹{{ snap.itc.lost_display }} of at-risk input credit — surfaced before filing.</p>
+            </div>
+            <div class="story-step" data-reveal>
+                <div class="story-num">02 / EXPLAIN</div>
+                <h3>Answer in plain language</h3>
+                <p>Summary first, reasoning second, raw evidence last. Every sentence is pinned to an engine call and a number allow-list.</p>
+            </div>
+            <div class="story-step" data-reveal>
+                <div class="story-num">03 / PROVE</div>
+                <h3>Leave a verifiable trail</h3>
+                <p>Merkle proofs and DID credentials let a CA — or a notice — verify a filing without trusting a screenshot.</p>
+            </div>
+        </div>
+
+        <div class="demo-grid">
+            <!-- Accrual trap -->
+            <article class="card wide" data-reveal>
+                <div class="card-top">
+                    <span class="engine">tax_rules · accrual split</span>
+                    <span class="pill rose">Cash-flow risk</span>
+                </div>
+                <h3>The accrual tax trap</h3>
+                <p class="muted">Presumptive tax is owed on invoices, not on cash received. Split the bill into what your bank balance can cover and what it cannot.</p>
+
+                <div class="zone">
+                    <div class="zone-bar" role="img" aria-label="{{ snap.accrual.green_share_pct }} percent of tax is cash-backed, {{ snap.accrual.red_share_pct }} percent is accrual exposure">
+                        <span class="zone-green" style="width: {{ snap.accrual.green_share_pct }}%"></span>
+                        <span class="zone-red" style="width: {{ snap.accrual.red_share_pct }}%"></span>
+                    </div>
+                    <div class="zone-legend">
+                        <span><b>{{ snap.accrual.green_share_pct }}%</b> cash-backed</span>
+                        <span><b>{{ snap.accrual.red_share_pct }}%</b> accrual exposure</span>
+                    </div>
+                </div>
+
+                <div class="zone-split">
+                    <div class="zone-box green">
+                        <div class="zone-title">Green zone · paid invoices</div>
+                        <div class="zone-value">₹{{ snap.accrual.green_zone_display }}</div>
+                        <small>Tax on {{ snap.accrual.paid_invoice_count }} settled invoices</small>
+                    </div>
+                    <div class="zone-box red">
+                        <div class="zone-title">Red zone · unpaid invoices</div>
+                        <div class="zone-value">₹{{ snap.accrual.red_zone_display }}</div>
+                        <small>Tax on {{ snap.accrual.unpaid_invoice_count }} outstanding invoices</small>
+                    </div>
+                </div>
+
+                {% if snap.accrual.needs_borrowing %}
+                <div class="callout rose">
+                    <span aria-hidden="true">⚠</span>
+                    <span>
+                        <strong>₹{{ snap.accrual.borrowed_display }}</strong> must be borrowed to pay advance tax on money not yet collected —
+                        about <strong>₹{{ snap.accrual.interest_display }}</strong> in interest over 90 days at 18% p.a.
+                    </span>
+                </div>
+                {% else %}
+                <div class="callout emerald">
+                    <span aria-hidden="true">✓</span>
+                    <span>Cash balance covers the full liability. No borrowing required this quarter.</span>
+                </div>
+                {% endif %}
+
+                <div class="card-foot">tax_rules.calculate_accrual_split(invoices, cash_balance=200000)</div>
+            </article>
+
+            <!-- GST radar -->
+            <article class="card" data-reveal>
+                <div class="card-top">
+                    <span class="engine">forecast_engine</span>
+                    <span class="pill {{ snap.gst.status_tone }}">{{ snap.gst.status }}</span>
+                </div>
+                <h3>GST threshold radar</h3>
+                <div class="metric">
+                    <span class="metric-value sm">{{ snap.gst.predicted_display }}</span>
+                </div>
+                <p class="muted">Projected crossing of the ₹{{ snap.gst.threshold_display }} registration limit, fitted on cumulative receipts.</p>
+                <div class="kv">
+                    <div class="kv-row"><span>Days remaining</span><b>{% if snap.gst.days_remaining == 0 %}crossed{% else %}{{ snap.gst.days_remaining }}{% endif %}</b></div>
+                    <div class="kv-row"><span>Fit quality (R²)</span><b>{{ snap.gst.r_squared }}</b></div>
+                    <div class="kv-row"><span>Structural break</span><b>{% if snap.gst.is_structural_break %}detected{% else %}none{% endif %}</b></div>
+                </div>
+                <p class="tiny">{{ snap.gst.status_note }}</p>
+                <div class="card-foot">forecast_engine.forecast_gst_crossing(invoices)</div>
+            </article>
+
+            <!-- AIS -->
+            <article class="card" data-reveal>
+                <div class="card-top">
+                    <span class="engine">ais_engine · reconcile</span>
+                    <span class="pill amber">{{ snap.ais.unmatched_ais_count }} gaps</span>
+                </div>
+                <h3>AIS reconciliation</h3>
+                <div class="gauge-wrap">
+                    <div class="gauge" style="--pct: {{ snap.ais.confidence_pct }}" role="img" aria-label="AIS match rate {{ snap.ais.confidence_pct }} percent">
+                        <span>{{ snap.ais.confidence_pct }}%</span>
+                    </div>
+                    <div>
+                        <div class="metric">
+                            <span class="metric-value sm">₹{{ snap.ais.variance_display }}</span>
+                        </div>
+                        <p class="tiny">Variance between AIS (₹{{ snap.ais.total_ais_display }}) and books (₹{{ snap.ais.total_books_display }})</p>
+                    </div>
+                </div>
+                <div class="kv">
+                    <div class="kv-row"><span>Matched pairs</span><b>{{ snap.ais.matched_count }}</b></div>
+                    <div class="kv-row"><span>Only in AIS</span><b>{{ snap.ais.unmatched_ais_count }}</b></div>
+                    <div class="kv-row"><span>Only in books</span><b>{{ snap.ais.unmatched_books_count }}</b></div>
+                    <div class="kv-row"><span>Scrutiny risk</span><b>{{ snap.ais.scrutiny_risk_pct }}%</b></div>
+                </div>
+                <div class="chips">
+                    {% for name in snap.ais.unmatched_ais_names[:2] %}
+                    <span class="chip">{{ name }}</span>
+                    {% endfor %}
+                </div>
+                <div class="card-foot">ais_engine.reconcile(invoices, ais_entries)</div>
+            </article>
+
+            <!-- Classifier -->
+            <article class="card" data-reveal>
+                <div class="card-top">
+                    <span class="engine">classifier_engine</span>
+                    <span class="pill indigo">{{ snap.classification.section }}</span>
+                </div>
+                <h3>Activity classifier</h3>
+                <div class="metric">
+                    <span class="metric-value">{{ snap.classification.confidence_pct }}%</span>
+                    <span class="metric-unit">confidence</span>
+                </div>
+                <p class="muted">Client names point to a profession — Section 44ADA at 50% deemed profit, not 44AD at 8%.</p>
+                <div class="chips">
+                    {% for keyword in snap.classification.matched_keywords[:5] %}
+                    <span class="chip ok">{{ keyword }}</span>
+                    {% endfor %}
+                </div>
+                <div class="kv">
+                    <div class="kv-row"><span>Professional matches</span><b>{{ snap.classification.professional_score }}</b></div>
+                    <div class="kv-row"><span>Business matches</span><b>{{ snap.classification.business_score }}</b></div>
+                </div>
+                <div class="card-foot">classifier_engine.classify_activity(vendors)</div>
+            </article>
+
+            <!-- ITC -->
+            <article class="card" data-reveal>
+                <div class="card-top">
+                    <span class="engine">gst_engine · itc match</span>
+                    <span class="pill rose">Leakage</span>
+                </div>
+                <h3>Input credit at risk</h3>
+                <div class="metric">
+                    <span class="metric-value">₹{{ snap.itc.lost_display }}</span>
+                </div>
+                <p class="muted">One supplier never filed GSTR-1. The credit sits in your books but not in GSTR-2B — claim it and it will be reversed.</p>
+                <div class="kv">
+                    <div class="kv-row"><span>ITC claimed in books</span><b>₹{{ snap.itc.books_display }}</b></div>
+                    <div class="kv-row"><span>ITC available in 2B</span><b>₹{{ snap.itc.available_display }}</b></div>
+                    <div class="kv-row"><span>Unmatched suppliers</span><b>{{ snap.itc.unmatched_books_count }}</b></div>
+                </div>
+                <div class="card-foot">gst_engine.reconcile_itc(purchases, gstr2b)</div>
+            </article>
+
+            <!-- Advance tax -->
+            <article class="card" data-reveal>
+                <div class="card-top">
+                    <span class="engine">tax_rules · advance tax</span>
+                    <span class="pill cyan">{{ snap.advance.installment }}</span>
+                </div>
+                <h3>Next installment</h3>
+                <div class="metric">
+                    <span class="metric-value">₹{{ snap.advance.cumulative_due_display }}</span>
+                </div>
+                <p class="muted">Cumulative advance tax due {{ snap.advance.due_date }} — {{ snap.advance.percent }}% of the year's projected liability.</p>
+                <div class="barline" role="img" aria-label="{{ snap.advance.percent }} percent of annual liability due">
+                    <span style="width: {{ snap.advance.percent }}%"></span>
+                </div>
+                <div class="card-foot">tax_rules.get_upcoming_advance_tax(liability)</div>
+            </article>
+
+            <!-- Regime -->
+            <article class="card" data-reveal>
+                <div class="card-top">
+                    <span class="engine">tax_rules · 44ADA</span>
+                    <span class="pill emerald">₹{{ snap.regime.savings_display }} saved</span>
+                </div>
+                <h3>Regime comparison</h3>
+                <div class="kv">
+                    <div class="kv-row"><span>New regime</span><b>₹{{ snap.regime.new_tax_display }}</b></div>
+                    <div class="kv-row"><span>Old regime</span><b>₹{{ snap.regime.old_tax_display }}</b></div>
+                    <div class="kv-row"><span>Presumptive income</span><b>₹{{ snap.regime.presumptive_income_display }}</b></div>
+                </div>
+                <p class="muted">Preferred: <strong>{{ snap.regime.preferred }}</strong>. Same receipts, ₹{{ snap.regime.savings_display }} difference.</p>
+                <div class="card-foot">tax_rules.calculate_44ada_tax(receipts)</div>
+            </article>
+
+            <!-- Misclassification -->
+            <article class="card" data-reveal>
+                <div class="card-top">
+                    <span class="engine">classifier_engine</span>
+                    <span class="pill amber">Classification</span>
+                </div>
+                <h3>Section sensitivity</h3>
+                <div class="metric">
+                    <span class="metric-value">₹{{ snap.switch.cost_display }}</span>
+                </div>
+                <p class="muted">The same receipts produce different liabilities under 44ADA and 44AD. That gap is why the classifier must be defensible, not optimised.</p>
+                <div class="kv">
+                    <div class="kv-row"><span>44ADA liability</span><b>₹{{ snap.switch.tax_44ada_display }}</b></div>
+                    <div class="kv-row"><span>44AD liability (after rebate)</span><b>₹{{ snap.switch.tax_44ad_display }}</b></div>
+                    <div class="kv-row"><span>Higher liability</span><b>{{ snap.switch.worse_regime }}</b></div>
+                </div>
+                {% if snap.switch.tax_44ad == 0 %}
+                <p class="tiny">44AD's 8% deemed profit falls inside the Section 87A rebate, so its liability is nil. The classification still has to match the actual activity.</p>
+                {% endif %}
+                <div class="card-foot">classifier_engine.simulate_retroactive_switch(receipts)</div>
+            </article>
+
+            <!-- GST payable -->
+            <article class="card" data-reveal>
+                <div class="card-top">
+                    <span class="engine">gst_engine · gstr-3b</span>
+                    <span class="pill cyan">Monthly</span>
+                </div>
+                <h3>Net GST payable</h3>
+                <div class="metric">
+                    <span class="metric-value">₹{{ snap.gstr3b.net_payable_display }}</span>
+                </div>
+                <p class="muted">Output tax less eligible input credit, before the next GSTR-3B filing.</p>
+                <div class="kv">
+                    <div class="kv-row"><span>Output tax (18%)</span><b>₹{{ snap.gstr3b.output_tax_display }}</b></div>
+                    <div class="kv-row"><span>Input tax credit</span><b>₹{{ snap.gstr3b.itc_display }}</b></div>
+                </div>
+                <div class="card-foot">gst_engine.calculate_gstr3b(invoices, purchases)</div>
+            </article>
+
+            <!-- Liquidity -->
+            <article class="card" data-reveal>
+                <div class="card-top">
+                    <span class="engine">forecast_engine · monte carlo</span>
+                    <span class="pill {{ 'rose' if snap.liquidity.risk_pct >= 30 else 'emerald' }}">{{ snap.liquidity.risk_pct }}% risk</span>
+                </div>
+                <h3>30-day liquidity</h3>
+                <div class="metric">
+                    <span class="metric-value">{{ snap.liquidity.risk_pct }}%</span>
+                    <span class="metric-unit">of 1,000 runs dip below safety</span>
+                </div>
+                <p class="muted">Seeded simulation so a CA can reproduce the exact same paths.</p>
+                <div class="kv">
+                    <div class="kv-row"><span>Days sales outstanding</span><b>{{ snap.liquidity.dso }}</b></div>
+                    <div class="kv-row"><span>Cash conversion cycle</span><b>{{ snap.liquidity.ccc }} days</b></div>
+                </div>
+                <div class="card-foot">forecast_engine.forecast_cash_flow(invoices)</div>
+            </article>
+
+            <!-- Late filing -->
+            <article class="card" data-reveal>
+                <div class="card-top">
+                    <span class="engine">forecast_engine · penalties</span>
+                    <span class="pill rose">{{ snap.penalties.risk_pct|int }}% risk</span>
+                </div>
+                <h3>Late-filing exposure</h3>
+                <div class="metric">
+                    <span class="metric-value">₹{{ snap.penalties.expected_display }}</span>
+                </div>
+                <p class="muted">Expected penalty if the next GSTR-3B slips past its due date. Output tax above the ₹20,00,000 turnover band drives the risk to {{ snap.penalties.risk_pct|int }}%.</p>
+                <div class="kv">
+                    <div class="kv-row"><span>Maximum exposure</span><b>₹{{ snap.penalties.max_display }}</b></div>
+                    <div class="kv-row"><span>Model</span><b>Deterministic bands</b></div>
+                </div>
+                <div class="card-foot">forecast_engine.forecast_penalties(invoices)</div>
+            </article>
+        </div>
+    </section>
+
+    <!-- ============ WHAT-IF ============ -->
+    <section class="wrap section" id="simulator" style="padding-top: 0;">
+        <div class="section-head">
+            <span class="kicker">What-if simulator</span>
+            <h2>Move the revenue. Watch the liability move.</h2>
+            <p>One deterministic call to the tax engine — no model, no sampling, no drift.</p>
+        </div>
+
+        <div class="sim" data-reveal>
+            <div>
+                <label for="receipts">
+                    <span>Annual receipts</span>
+                    <strong id="receipts-value">₹{{ snap.receipts.total_display }}</strong>
+                </label>
+                <input id="receipts" type="range" min="1000000" max="7500000" step="50000"
+                       value="{{ snap.receipts.total|int }}" aria-describedby="sim-hint">
+                <div class="sim-scale"><span>₹10,00,000</span><span>44ADA ceiling ₹75,00,000</span></div>
+                <p class="tiny" id="sim-hint" style="margin-top: 14px;">
+                    Presumptive income is 50% of receipts. The 44ADA ceiling is ₹{{ snap.regime.limit_display }};
+                    above it, regular books and audit rules apply.
+                </p>
+                <div class="callout emerald" style="margin-top: 16px;">
+                    <span aria-hidden="true">i</span>
+                    <span>The simulator calls <strong>tax_rules.calculate_44ada_tax</strong> on the server. The same input always returns the same number.</span>
+                </div>
+            </div>
+
+            <div>
+                <div class="sim-out" aria-live="polite">
+                    <div class="sim-box{% if snap.regime.preferred == 'New Tax Regime' %} preferred{% endif %}" id="box-new">
+                        <div class="label">New regime</div>
+                        <div class="value" id="out-new">₹{{ snap.regime.new_tax_display }}</div>
+                    </div>
+                    <div class="sim-box{% if snap.regime.preferred != 'New Tax Regime' %} preferred{% endif %}" id="box-old">
+                        <div class="label">Old regime</div>
+                        <div class="value" id="out-old">₹{{ snap.regime.old_tax_display }}</div>
+                    </div>
+                    <div class="sim-verdict">
+                        <span id="out-verdict">Preferred: <b>{{ snap.regime.preferred }}</b> · saving ₹{{ snap.regime.savings_display }}</span>
+                        <span class="pill emerald" id="out-status">Within 44ADA</span>
+                    </div>
+                </div>
+                <p class="tiny" style="margin-top: 12px;">Illustrative estimate for a resident individual with no other income. Not tax advice.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============ ASK / GUARDRAILS ============ -->
+    <section class="wrap section" id="guardrails" style="padding-top: 0;">
+        <div class="section-head">
+            <span class="kicker">Answer surface</span>
+            <h2>Summary first. Reasoning second. Evidence last.</h2>
+            <p>The intelligence layer is built around progressive disclosure: a busy freelancer reads the first block, a CA audits the last one.</p>
+        </div>
+
+        <div class="split-2">
+            <div class="panel" data-reveal>
+                <div class="panel-head">
+                    <h3>One question, three depths</h3>
+                    <p>Template narration over this snapshot · deterministic path</p>
+                </div>
+
+                <div class="question">
+                    “I've booked ₹{{ snap.receipts.total_display }} this year but only ₹{{ snap.receipts.paid_display }} has landed.
+                    Will I cross the GST limit, and how much tax do I actually owe in December?”
+                </div>
+
+                <div class="tabs" role="tablist" aria-label="Answer depth">
+                    <button class="tab" role="tab" id="tab-summary" aria-controls="panel-summary" aria-selected="true" data-tab="summary">Summary</button>
+                    <button class="tab" role="tab" id="tab-reasoning" aria-controls="panel-reasoning" aria-selected="false" tabindex="-1" data-tab="reasoning">Reasoning</button>
+                    <button class="tab" role="tab" id="tab-evidence" aria-controls="panel-evidence" aria-selected="false" tabindex="-1" data-tab="evidence">Evidence</button>
+                </div>
+
+                <div class="tab-panel" role="tabpanel" id="panel-summary" aria-labelledby="tab-summary">
+                    <ul class="summary-list">
+                        <li>
+                            <span class="dot" aria-hidden="true">1</span>
+                            <span>
+                                <b>GST.</b> On the current trend the ₹{{ snap.gst.threshold_display }} threshold is
+                                {% if snap.gst.days_remaining == 0 and snap.gst.predicted_date[:5] != 'Never' %}
+                                    already crossed (projected {{ snap.gst.predicted_display }}).
+                                {% else %}
+                                    projected to be crossed on {{ snap.gst.predicted_display }}.
+                                {% endif %}
+                                Registration is due within 30 days of crossing.
+                            </span>
+                        </li>
+                        <li>
+                            <span class="dot" aria-hidden="true">2</span>
+                            <span>
+                                <b>Income tax.</b> Under 44ADA your liability is
+                                <b>₹{{ snap.regime.new_tax_display }}</b> ({{ snap.regime.preferred|lower }}). Only
+                                <b>₹{{ snap.accrual.green_zone_display }}</b> of it is backed by cash already received;
+                                <b>₹{{ snap.accrual.red_zone_display }}</b> sits on unpaid invoices.
+                            </span>
+                        </li>
+                        <li>
+                            <span class="dot" aria-hidden="true">3</span>
+                            <span>
+                                <b>Next deadline.</b> {{ snap.advance.installment }} on {{ snap.advance.due_date }}:
+                                <b>₹{{ snap.advance.cumulative_due_display }}</b> cumulative.
+                                {% if snap.accrual.needs_borrowing %}
+                                    You would need to borrow about <b>₹{{ snap.accrual.borrowed_display }}</b> to pay it on time.
+                                {% else %}
+                                    Your current cash balance covers it.
+                                {% endif %}
+                            </span>
+                        </li>
+                        <li>
+                            <span class="dot" aria-hidden="true">4</span>
+                            <span>
+                                <b>AIS.</b> {{ snap.ais.matched_count }} entries match; {{ snap.ais.unmatched_ais_count }} exist only in AIS.
+                                A ₹{{ snap.ais.variance_display }} variance carries a {{ snap.ais.scrutiny_risk_pct }}% scrutiny signal — resolve it before filing.
+                            </span>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="tab-panel" role="tabpanel" id="panel-reasoning" aria-labelledby="tab-reasoning" hidden>
+                    <ol class="reasoning">
+                        <li>
+                            <span class="step-num">1</span>
+                            <span>Read the ledger: 6 invoices, ₹{{ snap.receipts.total_display }} booked, ₹{{ snap.receipts.unpaid_display }} outstanding. <br><code>present_demo.DEMO_INVOICES</code></span>
+                        </li>
+                        <li>
+                            <span class="step-num">2</span>
+                            <span>Fit cumulative receipts against invoice dates; project the ₹{{ snap.gst.threshold_display }} crossing at {{ snap.gst.predicted_display }} (R² {{ snap.gst.r_squared }}). <br><code>forecast_engine.forecast_gst_crossing</code></span>
+                        </li>
+                        <li>
+                            <span class="step-num">3</span>
+                            <span>Split projected tax by collected versus outstanding revenue: ₹{{ snap.accrual.green_zone_display }} green, ₹{{ snap.accrual.red_zone_display }} red, borrowing need ₹{{ snap.accrual.borrowed_display }}. <br><code>tax_rules.calculate_accrual_split</code></span>
+                        </li>
+                        <li>
+                            <span class="step-num">4</span>
+                            <span>Match books to AIS on name similarity and amount tolerance: {{ snap.ais.matched_count }} matched, ₹{{ snap.ais.variance_display }} variance, {{ snap.ais.scrutiny_risk_pct }}% risk. <br><code>ais_engine.reconcile</code></span>
+                        </li>
+                        <li>
+                            <span class="step-num">5</span>
+                            <span>Compute the next advance-tax instalment: {{ snap.advance.percent }}% of ₹{{ snap.regime.new_tax_display }} due {{ snap.advance.due_date }} = ₹{{ snap.advance.cumulative_due_display }}. <br><code>tax_rules.get_upcoming_advance_tax</code></span>
+                        </li>
+                        <li>
+                            <span class="step-num">6</span>
+                            <span>Citation check: no section is attached to this draft. The production narrator refuses until the local corpus (M5) resolves a citation. <br><code>intel/rag.py — planned</code></span>
+                        </li>
+                    </ol>
+                </div>
+
+                <div class="tab-panel" role="tabpanel" id="panel-evidence" aria-labelledby="tab-evidence" hidden>
+                    <div class="evidence-head">
+                        <span class="tiny">Raw envelope · every number used above</span>
+                        <button class="btn ghost small" type="button" id="copy-json">Copy JSON</button>
+                    </div>
+                    <pre class="json" id="evidence-json">{{ snap | tojson(indent=2) }}</pre>
+                </div>
+            </div>
+
+            <div class="panel" data-reveal>
+                <div class="panel-head">
+                    <h3>The narrator cannot invent a number.</h3>
+                    <p>Guardrails that make a generated answer auditable</p>
+                </div>
+
+                <ul class="guard-list" style="padding: 0 22px;">
+                    <li><span class="tick" aria-hidden="true">✓</span><span><b>Numeric allow-list.</b> Post-processing rejects any figure not present in the engine envelope.</span></li>
+                    <li><span class="tick" aria-hidden="true">✓</span><span><b>Citation required.</b> A claim without a resolvable local section is refused, not softened.</span></li>
+                    <li><span class="tick" aria-hidden="true">✓</span><span><b>Confidence floor.</b> Low-confidence inputs produce a refusal with a reason and the missing data named.</span></li>
+                    <li><span class="tick" aria-hidden="true">✓</span><span><b>Append-only memory.</b> Stored answers are replayable from the original envelope JSON.</span></li>
+                </ul>
+
+                <div class="numbers-demo" style="padding: 0 22px;">
+                    <span class="num">₹{{ snap.receipts.total_display }}</span>
+                    <span class="num">{{ snap.ais.confidence_pct }}%</span>
+                    <span class="num">₹{{ snap.accrual.red_zone_display }}</span>
+                    <span class="num">₹{{ snap.advance.cumulative_due_display }}</span>
+                    <span class="num bad" title="Not produced by any engine function">₹1,24,000</span>
+                </div>
+                <p class="tiny" style="padding: 10px 22px 0;">Green chips exist in the envelope. A number outside it — like the struck-through chip — is rejected.</p>
+
+                <div class="refusal">
+                    <span class="refusal-tag">Refusal · out of scope</span><br>
+                    <strong>Q:</strong> “File my GSTR-3B for me.”<br>
+                    <strong>A:</strong> Refused — TaxKernel computes and prepares filings, but never submits on your behalf.
+                    <span class="tiny" style="display: block; margin-top: 8px;">refusal_reason = <code>action_not_supported</code> · no network calls, no credentials leave the device</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============ ROADMAP ============ -->
+    <section class="wrap section" id="roadmap" style="padding-top: 0;">
+        <div class="section-head">
+            <span class="kicker">Under the hood</span>
+            <h2>Deterministic core today. Guarded intelligence next.</h2>
+            <p>The engines, dashboards and proofs are live. The intelligence layer is being built milestone by milestone — with the refusal path finished before the fluent one.</p>
+        </div>
+
+        <div class="pipeline">
+            <div class="stage" data-reveal>
+                <div class="stage-step">STEP 01</div>
+                <h4>Question</h4>
+                <p>Natural language, or a dashboard action.</p>
+            </div>
+            <div class="stage" data-reveal>
+                <div class="stage-step">STEP 02</div>
+                <h4>Intent router</h4>
+                <p>Rules-first classification with entity slots. No LLM required. <em>M3</em></p>
+            </div>
+            <div class="stage" data-reveal>
+                <div class="stage-step">STEP 03</div>
+                <h4>Engines</h4>
+                <p>GST, TDS, TP, AIS, forecast, classifier. <em>Live</em></p>
+            </div>
+            <div class="stage" data-reveal>
+                <div class="stage-step">STEP 04</div>
+                <h4>Guardrail</h4>
+                <p>Numeric allow-list, citations, confidence floor. <em>M4–M6</em></p>
+            </div>
+            <div class="stage" data-reveal>
+                <div class="stage-step">STEP 05</div>
+                <h4>Envelope</h4>
+                <p>Summary, reasoning, evidence — stored and replayable. <em>M2–M7</em></p>
+            </div>
+        </div>
+
+        <div class="milestones">
+            <div class="milestone done">
+                <div class="id">M0</div>
+                <h4>Environment + baseline</h4>
+                <p>Python 3.11.9 · 15/15 frozen tests green · baseline documented.</p>
+            </div>
+            <div class="milestone now">
+                <div class="id">M1</div>
+                <h4>Security hardening</h4>
+                <p>OS keystore, Argon2id device passwords.</p>
+            </div>
+            <div class="milestone">
+                <div class="id">M2–M3</div>
+                <h4>Intelligence skeleton</h4>
+                <p>Typed envelopes, intent, orchestrator.</p>
+            </div>
+            <div class="milestone">
+                <div class="id">M4–M6</div>
+                <h4>Narrator + RAG</h4>
+                <p>Templates, citations, confidence fusion.</p>
+            </div>
+            <div class="milestone">
+                <div class="id">M7–M9</div>
+                <h4>Surface + release</h4>
+                <p>API, UI, self-audit, hardening.</p>
+            </div>
+        </div>
+
+        <div class="provenance" style="margin-top: 22px;">
+            <span>This page is the initial presentation surface.</span>
+            <span>Milestone gates:</span>
+            <code>IMPLEMENTATION_PLAN.md</code>
+        </div>
+    </section>
+
+</main>
+
+<footer>
+    <div class="wrap foot-grid">
+        <div>
+            <div class="brand" style="margin-bottom: 10px;">
+                <span class="brand-mark" aria-hidden="true">TK</span>
+                <span class="brand-text">
+                    <span class="brand-name">TaxKernel</span>
+                    <span class="brand-sub">Local-first tax OS</span>
+                </span>
+            </div>
+            <p class="foot-note">
+                Sample data only. Figures are computed by the shipped deterministic engines on an in-memory ledger.
+                Nothing on this page is tax advice, and the server makes no outbound network calls.
+            </p>
+        </div>
+        <div class="foot-links">
+            <a href="/">Freelancer dashboard</a>
+            <a href="/ca">CA portal</a>
+            <a href="/summary">Shareable summary</a>
+            <a href="/capture">Invoice capture</a>
+            <a href="/status">Health</a>
+        </div>
+    </div>
+</footer>
+
+<script>
+    (function () {
+        "use strict";
+
+        // ---------- Reveal on scroll ----------
+        var reveals = document.querySelectorAll("[data-reveal]");
+        if ("IntersectionObserver" in window && !window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+            var observer = new IntersectionObserver(function (entries) {
+                entries.forEach(function (entry) {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add("in");
+                        observer.unobserve(entry.target);
+                    }
+                });
+            }, { rootMargin: "0px 0px -40px 0px", threshold: 0.08 });
+            reveals.forEach(function (el) { observer.observe(el); });
+        } else {
+            reveals.forEach(function (el) { el.classList.add("in"); });
+        }
+
+        // ---------- Depth: card tilt, pointer glare, aurora drift ----------
+        var reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+        var finePointer = window.matchMedia("(hover: hover) and (pointer: fine)");
+
+        if (finePointer.matches && !reduceMotion.matches) {
+            var cards = document.querySelectorAll(".card");
+
+            cards.forEach(function (card) {
+                var pending = 0;
+                var pointerX = 0;
+                var pointerY = 0;
+
+                card.addEventListener("pointermove", function (event) {
+                    pointerX = event.clientX;
+                    pointerY = event.clientY;
+                    if (pending) { return; }
+                    pending = window.requestAnimationFrame(function () {
+                        pending = 0;
+                        var rect = card.getBoundingClientRect();
+                        if (!rect.width || !rect.height) { return; }
+                        var x = (pointerX - rect.left) / rect.width;
+                        var y = (pointerY - rect.top) / rect.height;
+                        card.classList.add("is-tilting");
+                        card.style.setProperty("--ry", ((x - 0.5) * 16).toFixed(2) + "deg");
+                        card.style.setProperty("--rx", ((0.5 - y) * 16).toFixed(2) + "deg");
+                        card.style.setProperty("--gx", (x * 100).toFixed(1) + "%");
+                        card.style.setProperty("--gy", (y * 100).toFixed(1) + "%");
+                    });
+                });
+
+                card.addEventListener("pointerleave", function () {
+                    if (pending) {
+                        window.cancelAnimationFrame(pending);
+                        pending = 0;
+                    }
+                    card.classList.remove("is-tilting");
+                    card.style.setProperty("--rx", "0deg");
+                    card.style.setProperty("--ry", "0deg");
+                });
+            });
+
+            var hero = document.querySelector(".hero");
+            var snapshot = document.querySelector(".snapshot");
+            var orbs = document.querySelectorAll(".orb");
+            var heroFrame = 0;
+            var lastX = 0;
+            var lastY = 0;
+
+            document.addEventListener("pointermove", function (event) {
+                lastX = event.clientX;
+                lastY = event.clientY;
+                if (heroFrame) { return; }
+                heroFrame = window.requestAnimationFrame(function () {
+                    heroFrame = 0;
+                    var nx = lastX / window.innerWidth - 0.5;
+                    var ny = lastY / window.innerHeight - 0.5;
+
+                    orbs.forEach(function (orb, index) {
+                        var depth = 14 + index * 12;
+                        orb.style.setProperty("--mx", (nx * depth).toFixed(1) + "px");
+                        orb.style.setProperty("--my", (ny * depth).toFixed(1) + "px");
+                    });
+
+                    if (!hero || !snapshot) { return; }
+                    var rect = hero.getBoundingClientRect();
+                    var inside = lastY >= rect.top - 40 && lastY <= rect.bottom + 40 &&
+                        lastX >= rect.left - 40 && lastX <= rect.right + 40;
+                    if (inside && window.innerWidth > 1080) {
+                        snapshot.style.setProperty("--ry", (nx * 10).toFixed(2) + "deg");
+                        snapshot.style.setProperty("--rx", (-ny * 7).toFixed(2) + "deg");
+                    } else {
+                        snapshot.style.setProperty("--rx", "0deg");
+                        snapshot.style.setProperty("--ry", "0deg");
+                    }
+                });
+            }, { passive: true });
+
+            document.addEventListener("pointerleave", function () {
+                orbs.forEach(function (orb) {
+                    orb.style.setProperty("--mx", "0px");
+                    orb.style.setProperty("--my", "0px");
+                });
+                if (snapshot) {
+                    snapshot.style.setProperty("--rx", "0deg");
+                    snapshot.style.setProperty("--ry", "0deg");
+                }
+            });
+        }
+
+        // Header lifts off the page once the content scrolls beneath it.
+        var header = document.querySelector(".site-header");
+        if (header) {
+            var setHeaderState = function () {
+                header.classList.toggle("is-scrolled", window.scrollY > 8);
+            };
+            setHeaderState();
+            window.addEventListener("scroll", setHeaderState, { passive: true });
+        }
+
+        // ---------- Tabs ----------
+        var tabs = Array.prototype.slice.call(document.querySelectorAll("[data-tab]"));
+        var panels = {
+            summary: document.getElementById("panel-summary"),
+            reasoning: document.getElementById("panel-reasoning"),
+            evidence: document.getElementById("panel-evidence")
+        };
+
+        function selectTab(name) {
+            tabs.forEach(function (tab) {
+                var active = tab.dataset.tab === name;
+                tab.setAttribute("aria-selected", active ? "true" : "false");
+                tab.tabIndex = active ? 0 : -1;
+                var panel = panels[tab.dataset.tab];
+                if (panel) { panel.hidden = !active; }
+            });
+        }
+
+        tabs.forEach(function (tab, index) {
+            tab.addEventListener("click", function () { selectTab(tab.dataset.tab); });
+            tab.addEventListener("keydown", function (event) {
+                var next = null;
+                if (event.key === "ArrowRight") { next = tabs[(index + 1) % tabs.length]; }
+                if (event.key === "ArrowLeft") { next = tabs[(index - 1 + tabs.length) % tabs.length]; }
+                if (event.key === "Home") { next = tabs[0]; }
+                if (event.key === "End") { next = tabs[tabs.length - 1]; }
+                if (next) {
+                    event.preventDefault();
+                    next.focus();
+                    selectTab(next.dataset.tab);
+                }
+            });
+        });
+
+        // ---------- Copy evidence ----------
+        var copyButton = document.getElementById("copy-json");
+        if (copyButton) {
+            copyButton.addEventListener("click", function () {
+                var text = document.getElementById("evidence-json").textContent;
+                var done = function () {
+                    var original = copyButton.textContent;
+                    copyButton.textContent = "Copied";
+                    window.setTimeout(function () { copyButton.textContent = original; }, 1600);
+                };
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(text).then(done).catch(function () { fallback(); });
+                } else {
+                    fallback();
+                }
+                function fallback() {
+                    var range = document.createRange();
+                    range.selectNodeContents(document.getElementById("evidence-json"));
+                    var selection = window.getSelection();
+                    selection.removeAllRanges();
+                    selection.addRange(range);
+                    done();
+                }
+            });
+        }
+
+        // ---------- What-if slider ----------
+        var slider = document.getElementById("receipts");
+        var label = document.getElementById("receipts-value");
+        var outNew = document.getElementById("out-new");
+        var outOld = document.getElementById("out-old");
+        var outVerdict = document.getElementById("out-verdict");
+        var outStatus = document.getElementById("out-status");
+        var boxNew = document.getElementById("box-new");
+        var boxOld = document.getElementById("box-old");
+
+        function inr(value) {
+            var whole = Math.round(Number(value));
+            var text = String(Math.abs(whole));
+            var lastThree = text.slice(-3);
+            var rest = text.slice(0, -3);
+            if (rest) {
+                rest = rest.replace(/\B(?=(\d{2})+(?!\d))/g, ",");
+                text = rest + "," + lastThree;
+            }
+            return text;
+        }
+
+        if (slider) {
+            var controller = null;
+            var timer = null;
+
+            function render(point) {
+                label.textContent = "₹" + point.receipts_display;
+                outNew.textContent = "₹" + point.new_tax_display;
+                outOld.textContent = "₹" + point.old_tax_display;
+                outVerdict.innerHTML = "Preferred: <b>" + point.preferred + "</b> · saving ₹" + point.savings_display;
+                var exceeded = point.limit_exceeded;
+                outStatus.textContent = exceeded ? "Above 44ADA ceiling" : "Within 44ADA";
+                outStatus.className = "pill " + (exceeded ? "rose" : "emerald");
+                var preferredNew = point.preferred === "New Tax Regime";
+                boxNew.classList.toggle("preferred", preferredNew);
+                boxOld.classList.toggle("preferred", !preferredNew);
+            }
+
+            function request(value) {
+                if (controller) { controller.abort(); }
+                controller = new AbortController();
+                fetch("/api/present/regime?receipts=" + encodeURIComponent(value), {
+                    signal: controller.signal,
+                    headers: { "Accept": "application/json" }
+                })
+                    .then(function (response) {
+                        if (!response.ok) { throw new Error("bad response"); }
+                        return response.json();
+                    })
+                    .then(render)
+                    .catch(function (error) {
+                        if (error.name !== "AbortError") {
+                            outVerdict.textContent = "Engine unavailable — showing the last computed figures.";
+                        }
+                    });
+            }
+
+            slider.addEventListener("input", function () {
+                label.textContent = "₹" + inr(slider.value);
+                window.clearTimeout(timer);
+                timer = window.setTimeout(function () { request(slider.value); }, 140);
+            });
+        }
+
+        // ---------- Refresh snapshot ----------
+        var refresh = document.getElementById("refresh-snapshot");
+        if (refresh) {
+            refresh.addEventListener("click", function () {
+                refresh.disabled = true;
+                refresh.textContent = "Refreshing…";
+                fetch("/api/present/snapshot", { headers: { "Accept": "application/json" } })
+                    .then(function (response) { return response.json(); })
+                    .then(function (snap) {
+                        var map = {
+                            receipts: snap.receipts.total_display,
+                            tax: snap.regime.new_tax_display,
+                            ais: snap.ais.confidence_pct,
+                            risk: snap.ais.scrutiny_risk_pct
+                        };
+                        Object.keys(map).forEach(function (key) {
+                            var node = document.querySelector('[data-snap="' + key + '"]');
+                            if (node) { node.textContent = map[key]; }
+                        });
+                    })
+                    .catch(function () {})
+                    .then(function () {
+                        refresh.disabled = false;
+                        refresh.textContent = "Refresh";
+                    });
+            });
+        }
+    })();
+</script>
+</body>
+</html>

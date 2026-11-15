@@ -227,3 +227,31 @@ they are frozen, so this is documented rather than changed. A pre-run snapshot e
 | `mypy intel/ --strict` | n/a (no `intel/` yet — gate opens at M2) |
 
 **M0 verdict: GREEN — cleared to start M1.**
+
+---
+
+## 9. Presentation surface (additive, after M9)
+
+`GET /present` is a self-contained pitch/demo page for freelancers and CA
+firms. It reads an in-memory sample ledger through the shipped engines; it
+never opens `taxkernel_prod.db` and makes no outbound network calls.
+
+| File | Purpose |
+|---|---|
+| `templates/present.html` | Offline Jinja page: live snapshot, 10 engine cards, what-if simulator, guardrail/refusal panels, pipeline, roadmap. |
+| `present_demo.py` | Read-only snapshot builder over `DEMO_INVOICES` / `DEMO_AIS` / `DEMO_PURCHASES` / `DEMO_GSTR2B`. |
+| `test_presentation.py` | Pytest-style guard tests for the snapshot and regime point (5 tests). |
+| `main.py` (appended) | `GET /present`, `GET /api/present/snapshot`, `GET /api/present/regime`. |
+| `templates/dashboard.html`, `templates/ca_dashboard.html` | One `Pitch` nav link each. |
+
+Verified: `/present` renders (108 KB), `/api/present/snapshot` returns the
+snapshot, `/api/present/regime?receipts=2500000` returns the engine figures,
+and an out-of-range `receipts=-5` is rejected with HTTP 400.
+
+Visual layer (same file, no new dependencies): six fixed aurora orbs behind
+the page, glass surfaces with rim light, pointer-driven 3D tilt and glare on
+the demo cards, hero snapshot parallax, and a glossy range control. Effects
+are gated on `(hover: hover) and (pointer: fine)`, collapse under
+`prefers-reduced-motion`, and fall back to a static legible page without JS.
+Reveal animations use the independent `translate` property so they compose
+with the 3D `transform` on cards and the snapshot.

@@ -1225,3 +1225,25 @@ def intel_list_answers(user_id: int = 1, limit: int = 20):
     """List recent intelligence answers."""
     from intel.storage import list_answers
     return list_answers(user_id=user_id, limit=limit)
+
+# ========== PRESENTATION SURFACE ==========
+# Read-only pitch demo. Computes from the shipped engines against an in-memory
+# sample ledger; never reads or writes taxkernel_prod.db and never uses the network.
+@app.get("/present", response_class=HTMLResponse)
+def get_presentation(request: Request):
+    import present_demo
+    return templates.TemplateResponse(request, "present.html", {
+        "snap": present_demo.build_snapshot()
+    })
+
+@app.get("/api/present/snapshot")
+def get_presentation_snapshot():
+    import present_demo
+    return present_demo.build_snapshot()
+
+@app.get("/api/present/regime")
+def get_presentation_regime(receipts: float = 4200000.0):
+    import present_demo
+    if receipts < 0 or receipts > 100000000:
+        raise HTTPException(status_code=400, detail="receipts must be between 0 and 10,00,00,000")
+    return present_demo.regime_point(receipts)
