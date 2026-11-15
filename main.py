@@ -13,7 +13,16 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
 import qrcode
-from zeroconf import IPVersion, ServiceInfo, Zeroconf
+try:
+    from zeroconf import IPVersion, ServiceInfo, Zeroconf
+    MDNS_AVAILABLE = True
+    MDNS_IMPORT_ERROR = None
+except Exception as _mdns_exc:  # pragma: no cover - host/OS policy dependent
+    IPVersion = None  # type: ignore[assignment]
+    ServiceInfo = None  # type: ignore[assignment]
+    Zeroconf = None  # type: ignore[assignment]
+    MDNS_AVAILABLE = False
+    MDNS_IMPORT_ERROR = str(_mdns_exc)
 from cryptography.hazmat.primitives import hashes
 
 import database
@@ -84,6 +93,9 @@ def get_local_ip() -> str:
 @app.on_event("startup")
 async def startup_event():
     global zeroconf_instance, mdns_info
+    if not MDNS_AVAILABLE:
+        print(f"mDNS disabled (zeroconf unavailable): {MDNS_IMPORT_ERROR}")
+        return
     local_ip = get_local_ip()
     try:
         zeroconf_instance = Zeroconf()
@@ -425,6 +437,47 @@ def get_summary_qr():
     img_byte_arr.seek(0)
     return StreamingResponse(img_byte_arr, media_type="image/png")
 
+_SPOKEN_UNITS = {
+    "zero": 0, "one": 1, "two": 2, "three": 3, "four": 4, "five": 5, "six": 6,
+    "seven": 7, "eight": 8, "nine": 9, "ten": 10, "eleven": 11, "twelve": 12,
+    "thirteen": 13, "fourteen": 14, "fifteen": 15, "sixteen": 16,
+    "seventeen": 17, "eighteen": 18, "nineteen": 19,
+}
+_SPOKEN_TENS = {
+    "twenty": 20, "thirty": 30, "forty": 40, "fifty": 50, "sixty": 60,
+    "seventy": 70, "eighty": 80, "ninety": 90,
+}
+_SPOKEN_SCALES = {
+    "hundred": 100, "thousand": 1_000, "lakh": 100_000, "lac": 100_000,
+    "crore": 10_000_000,
+}
+
+def parse_spoken_amount(text: str) -> float:
+    """Best-effort English number parser. 'seventy-five thousand rupees' -> 75000.0"""
+    import re
+    tokens = [t for t in re.split(r"[^a-z]+", text.lower()) if t]
+    total = 0
+    current = 0
+    matched = False
+    for token in tokens:
+        if token in _SPOKEN_UNITS:
+            current += _SPOKEN_UNITS[token]
+            matched = True
+        elif token in _SPOKEN_TENS:
+            current += _SPOKEN_TENS[token]
+            matched = True
+        elif token in _SPOKEN_SCALES:
+            scale = _SPOKEN_SCALES[token]
+            if scale == 100:
+                current = (current or 1) * 100
+            else:
+                total += (current or 1) * scale
+                current = 0
+            matched = True
+    if not matched:
+        return 0.0
+    return float(total + current)
+
 @app.post("/voice-entry")
 def voice_entry(payload: dict):
     text = payload.get("text", "")
@@ -434,24 +487,9 @@ def voice_entry(payload: dict):
     if numbers:
         amount = float(numbers[0])
     
-    # Fallback parsing
+    # Fallback parsing for spoken numbers ("seventy-five thousand")
     if amount == 0.0:
-        words = text.lower().split()
-        text_num_map = {
-            "one": 1, "two": 2, "three": 3, "four": 4, "five": 5, "six": 6, "seven": 7, "eight": 8, "nine": 9, "ten": 10,
-            "twenty": 20, "thirty": 30, "forty": 40, "fifty": 50, "hundred": 100, "thousand": 1000, "lakh": 100000, "crore": 10000000
-        }
-        temp = 0
-        for w in words:
-            if w in text_num_map:
-                val = text_num_map[w]
-                if val >= 1000:
-                    if temp == 0: temp = 1
-                    amount += temp * val
-                    temp = 0
-                else:
-                    temp = val
-        if temp > 0: amount += temp
+        amount = parse_spoken_amount(text)
 
     vendor = "Unknown Vendor"
     words = text.split()
