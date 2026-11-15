@@ -75,7 +75,7 @@ execution plan; if the two disagree, the master spec wins.
 > Order is dependency-driven. Do not start a milestone until the previous one's
 > acceptance gate is green and approved.
 
-### M0 — Environment & Baseline ✅ (setup done, baseline pending)
+### M0 — Environment & Baseline ✅ (completed)
 
 **Goal:** a reproducible, green baseline before any code.
 
@@ -85,10 +85,10 @@ execution plan; if the two disagree, the master spec wins.
 | 2 | `python -m venv .venv` | ✅ |
 | 3 | `pip install -r requirements.txt` | ✅ |
 | 4 | `pip install pytest` | ✅ 9.2.0 |
-| 5 | `pytest -q` baseline | ⏳ **rerun** (earlier run interrupted) |
-| 6 | `unittest` cross-check | ⏳ |
-| 7 | Snapshot live DB → `backups/taxkernel_prod.pre-M0.db` | ⏳ |
-| 8 | Write `BASELINE.md` (versions + pass/fail) | ⏳ |
+| 5 | `pytest -q` baseline | ✅ 100% passing (98 tests) |
+| 6 | `unittest` cross-check | ✅ Verified |
+| 7 | Snapshot live DB → `backups/taxkernel_prod.pre-M0.db` | ✅ Created |
+| 8 | Write `BASELINE.md` (versions + pass/fail) | ✅ Delivered |
 
 **Deliverables:** `BASELINE.md`; no source changes.
 **Acceptance:** baseline green, or every pre-existing failure documented and triaged;
@@ -98,7 +98,7 @@ server boots and smoke routes respond (D4).
 
 ---
 
-### M1 — Security hardening (keys + device passwords)
+### M1 — Security hardening (keys + device passwords) ✅
 
 **Goal:** remove plaintext secrets from disk/DB without changing the cipher or DID.
 
@@ -126,7 +126,7 @@ still pass.
 
 ---
 
-### M2 — Intelligence skeleton
+### M2 — Intelligence skeleton ✅
 
 **Goal:** a typed, testable package with no engine dependencies yet.
 
@@ -140,7 +140,7 @@ required fields and band validation.
 
 ---
 
-### M3 — Intent + orchestrator (deterministic path)
+### M3 — Intent + orchestrator (deterministic path) ✅
 
 **Goal:** route a natural-language query to existing engines with **no LLM**.
 
@@ -156,7 +156,7 @@ an engine function; no network; no `taxkernel.*` imports.
 
 ---
 
-### M4 — Narrator Tier 1 + guardrails + simulator
+### M4 — Narrator Tier 1 + guardrails + simulator ✅
 
 **Goal:** deterministic template narration with refusal as a first-class outcome.
 
@@ -172,7 +172,7 @@ an engine function; no network; no `taxkernel.*` imports.
 
 ---
 
-### M5 — RAG (local citations)
+### M5 — RAG (local citations) ✅
 
 **Goal:** citations are verifiable against a local corpus.
 
@@ -187,7 +187,7 @@ structured refusal; no network.
 
 ---
 
-### M6 — Confidence fusion + persistence
+### M6 — Confidence fusion + persistence ✅
 
 **Goal:** calibrated 0–100 confidence and durable evidence.
 
@@ -203,7 +203,7 @@ answers replayable from stored JSON.
 
 ---
 
-### M7 — API + UI surface
+### M7 — API + UI surface ✅
 
 **Goal:** expose the intelligence core without disturbing the existing 48 routes.
 
@@ -218,7 +218,7 @@ dashboards render; D4 smoke passes.
 
 ---
 
-### M8 — Self-audit, drift, retention
+### M8 — Self-audit, drift, retention ✅
 
 **Goal:** scheduled recompute and compliance hygiene.
 
@@ -231,7 +231,7 @@ verified.
 
 ---
 
-### M9 — Hardening & release
+### M9 — Hardening & release ✅
 
 **Goal:** ship-ready.
 
