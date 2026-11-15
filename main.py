@@ -6,6 +6,7 @@ import io
 import datetime
 import asyncio
 import base64
+from pathlib import Path
 from typing import List, Dict, Optional
 from fastapi import FastAPI, Request, Form, File, UploadFile, HTTPException, Depends, WebSocket, WebSocketDisconnect
 from fastapi.responses import HTMLResponse, StreamingResponse
@@ -27,10 +28,9 @@ from cryptography.hazmat.primitives import hashes
 
 import database
 import tax_rules
-from crypto_vault import CryptoVault
+from intel.vault import build_crypto_vault, build_ssi_vault
 from agent_engine import TaxKernelAgentEngine
 from merkle_tree import MerkleTree
-from ssi_vault import SSIVault
 from forecast_engine import ForecastEngine
 from ais_engine import reconcile as ais_reconcile, generate_draft_invoices as ais_draft, generate_variance_report as ais_variance_report
 from classifier_engine import classify_activity, simulate_retroactive_switch, generate_defense_brief
@@ -40,8 +40,15 @@ import tp_engine
 import ca_engine
 app = FastAPI(title="TaxKernel Production Edge Hub")
 database.init_db()
-vault = CryptoVault()
-ssi_vault = SSIVault()
+try:
+    from migrations.run import ensure_schema
+    _pending_migrations = ensure_schema(Path(database.DB_PATH))
+    if _pending_migrations:
+        print(f"Migrations applied: {', '.join(_pending_migrations)}")
+except Exception as _migration_error:  # never block boot on a migration problem
+    print(f"WARNING: schema migrations not applied: {_migration_error}")
+vault = build_crypto_vault()
+ssi_vault = build_ssi_vault()
 forecaster = ForecastEngine()
 
 # Global mDNS responder reference

@@ -10,4 +10,6 @@ cryptography
 zeroconf
 websockets
 numpy
-
+# M1 — security hardening
+keyring
+argon2-cffi

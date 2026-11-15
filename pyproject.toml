@@ -1,0 +1,39 @@
+[tool.mypy]
+# Only the new intelligence layer is type-checked strictly. The legacy root
+# modules predate annotations and are exempt (see IMPLEMENTATION_PLAN.md §4).
+files = ["intel"]
+strict = true
+python_version = "3.11"
+show_error_codes = true
+pretty = true
+
+# `keyring` ships no py.typed marker; its surface is tiny and wrapped by
+# intel/keystore.py, so missing stubs are acceptable here.
+[[tool.mypy.overrides]]
+module = ["keyring", "keyring.*"]
+ignore_missing_imports = true
+
+# Legacy modules are imported by intel/ but are out of scope for strict typing.
+[[tool.mypy.overrides]]
+module = [
+    "database",
+    "crypto_vault",
+    "ssi_vault",
+    "merkle_tree",
+    "tax_rules",
+    "ais_engine",
+    "gst_engine",
+    "tds_engine",
+    "tp_engine",
+    "forecast_engine",
+    "classifier_engine",
+    "ca_engine",
+    "agent_engine",
+    "main",
+]
+ignore_errors = true
+
+[tool.pytest.ini_options]
+testpaths = ["."]
+# Keep the historical unittest suites and the new pytest-style tests in one run.
+python_files = ["test_*.py"]

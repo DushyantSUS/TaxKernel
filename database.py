@@ -1,12 +1,12 @@
 import sqlite3
 import os
-from crypto_vault import CryptoVault
+from intel.vault import build_crypto_vault
 
 DB_PATH = os.environ.get(
     "TAXKERNEL_DB_PATH",
     os.path.join(os.path.dirname(os.path.abspath(__file__)), "taxkernel_prod.db"),
 )
-vault = CryptoVault()
+vault = build_crypto_vault()
 
 def get_db_connection():
     conn = sqlite3.connect(DB_PATH)
@@ -436,23 +436,64 @@ def get_approvals(user_id: int):
 
 # Zero-trust Paired Devices
 def add_device(device_name: str, device_token: str, public_key: str = None, device_password: str = None):
+    """Register a paired device.
+
+    Since M1 the password is stored only as an Argon2id hash. When the
+    ``device_password_hash`` column exists (normal case) the legacy plaintext
+    column stays NULL. On an unmigrated database the hash is written into the
+    legacy column instead — still a hash, never plaintext.
+    """
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute("INSERT OR REPLACE INTO devices (device_name, device_token, public_key, device_password) VALUES (?, ?, ?, ?)", (device_name, device_token, public_key, device_password))
+    columns = {row[1] for row in cursor.execute("PRAGMA table_info(devices)")}
+    if device_password:
+        from intel.passwords import hash_password
+        digest = hash_password(device_password)
+        if "device_password_hash" in columns:
+            cursor.execute(
+                "INSERT OR REPLACE INTO devices (device_name, device_token, public_key, device_password, device_password_hash) VALUES (?, ?, ?, NULL, ?)",
+                (device_name, device_token, public_key, digest),
+            )
+        else:
+            cursor.execute(
+                "INSERT OR REPLACE INTO devices (device_name, device_token, public_key, device_password) VALUES (?, ?, ?, ?)",
+                (device_name, device_token, public_key, digest),
+            )
+    else:
+        cursor.execute("INSERT OR REPLACE INTO devices (device_name, device_token, public_key, device_password) VALUES (?, ?, ?, ?)", (device_name, device_token, public_key, device_password))
     conn.commit()
     conn.close()
 
-def verify_device_password(device_token: str, password_attempt: str) -> bool:
+def verify_device_password(device_token: str, password_attempt: str):
+    """Verify a device unlock attempt.
+
+    Returns ``True``/``False`` for a known device, or ``None`` when the device
+    is unknown *or* has no stored credential (must re-pair). The historical
+    literal fallback password has been removed in M1.
+    """
+    from intel.passwords import verify_device_credentials
+
     conn = get_db_connection()
     cursor = conn.cursor()
+    columns = {row[1] for row in cursor.execute("PRAGMA table_info(devices)")}
+    if "device_password_hash" in columns:
+        cursor.execute("SELECT device_password, device_password_hash FROM devices WHERE device_token = ?", (device_token,))
+        row = cursor.fetchone()
+        conn.close()
+        if not row:
+            return None
+        if not row[0] and not row[1]:
+            return None
+        return verify_device_credentials(row[0], row[1], password_attempt)
+
     cursor.execute("SELECT device_password FROM devices WHERE device_token = ?", (device_token,))
     row = cursor.fetchone()
     conn.close()
-    if row:
-        if row[0]:
-            return row[0] == password_attempt
-        return password_attempt.lower() == "taxkernel"
-    return None
+    if not row:
+        return None
+    if not row[0]:
+        return None
+    return verify_device_credentials(row[0], None, password_attempt)
 
 def get_device_public_key(device_token: str) -> str:
     conn = get_db_connection()
