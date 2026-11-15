@@ -1,0 +1,7 @@
+Unable to provide a verified calculation: {{ reason }}.
+{% if detail %}
+Detail: {{ detail }}
+{% endif %}
+{% if supported_topics %}
+Supported topics include: {{ supported_topics | join(', ') }}.
+{% endif %}

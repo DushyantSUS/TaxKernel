@@ -1,0 +1,7 @@
+Under Section 22 of the CGST Act 2017, the aggregate turnover registration threshold is {{ limit_inr }}.
+Your current turnover across {{ invoice_count }} invoices is {{ turnover_inr }}, leaving a headroom of {{ headroom_inr }}.
+{% if headroom_inr == "₹0" %}
+Mandatory GST registration has been triggered.
+{% elif note %}
+{{ note }}
+{% endif %}

@@ -1,0 +1,8 @@
+AIS reconciliation completed with {{ confidence_pct }}% confidence.
+Book turnover stands at {{ turnover_inr }}, while recorded AIS turnover is {{ ais_total_inr }}, leaving a variance of {{ variance_inr }}.
+Unmatched in AIS: {{ unmatched_ais }}. Unmatched in books: {{ unmatched_books }}.
+{% if variance_inr != "₹0" %}
+Taxpayer review is recommended before filing to prevent mismatch notices under CBDT guidelines.
+{% else %}
+Ledger records match AIS statements perfectly.
+{% endif %}
