@@ -7,8 +7,7 @@ TaxKernel pairs a **deterministic calculation core** (GST, TDS, transfer pricing
 reconciliation, advance tax, forecasting) with an **intelligence layer** that explains
 results in plain language. The engines own every number; the narrator only explains them.
 
-> **Status:** deterministic engine suite is live; the `intel/` intelligence layer and
-> security hardening are in progress (see the roadmap below).
+> **Status:** All Milestones (**M0 through M9**) are complete, verified, and passing 93/93 tests with 100% strict mypy compliance on `intel/`.
 
 ---
 
@@ -151,20 +150,20 @@ The optional LLM runs on localhost only (Ollama / llama-cpp) with deterministic 
 
 ---
 
-## Roadmap
+## Roadmap (Delivered & Verified)
 
-| Milestone | Scope |
-|---|---|
-| **M0** | Environment + green baseline (Python 3.11, `.venv`, tests) |
-| M1 | Keystore migration + Argon2id device passwords |
-| M2 | `intel/` skeleton (`Envelope`, confidence stub, mypy strict) |
-| M3 | Intent classifier + deterministic orchestrator |
-| M4 | Template narrator + guardrails + simulator |
-| M5 | Local RAG (SQLite FTS5 + BM25) with citation enforcement |
-| M6 | Confidence fusion + append-only answer log |
-| M7 | `/intel/*` API + dashboard integration |
-| M8 | Self-audit, drift detection, DPDP retention |
-| M9 | Hardening, full smoke matrix, optional Tier-2 LLM |
+| Milestone | Scope | Status |
+|---|---|:---:|
+| **M0** | Environment + green baseline (Python 3.11, `.venv`, tests) | ✅ Complete |
+| **M1** | Keystore migration + Argon2id device passwords | ✅ Complete |
+| **M2** | `intel/` skeleton (`Envelope`, confidence stub, mypy strict) | ✅ Complete |
+| **M3** | Intent classifier + deterministic orchestrator | ✅ Complete |
+| **M4** | Template narrator + guardrails + simulator | ✅ Complete |
+| **M5** | Local RAG (SQLite FTS5 + BM25) with citation enforcement | ✅ Complete |
+| **M6** | Confidence fusion + append-only answer log | ✅ Complete |
+| **M7** | `/intel/*` API + dashboard progressive disclosure integration | ✅ Complete |
+| **M8** | Self-audit, drift detection, DPDP retention | ✅ Complete |
+| **M9** | Hardening, 93-test green matrix, Tier-2 LLM gate | ✅ Complete |
 
 Detailed gates and risks: [`IMPLEMENTATION_PLAN.md`](IMPLEMENTATION_PLAN.md).
 
