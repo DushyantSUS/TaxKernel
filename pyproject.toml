@@ -32,6 +32,7 @@ module = [
     "main",
 ]
 ignore_errors = true
+disallow_untyped_calls = false
 
 [tool.pytest.ini_options]
 testpaths = ["."]
